@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkWise AI - Leaderboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body class="light-mode">
+
+    <aside class="sidebar">
+        <div class="logo-section">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
+            </svg>
+            <h1>WorkWise AI</h1>
+            <p>Manager Portal</p>
+        </div>
+
+        <nav class="nav-links">
+            <a href="teamdashboard.html">
+                <span class="material-icons">dashboard</span> Team Dashboard
+            </a>
+            <a href="yourdashboard.html">
+                <span class="material-icons">person</span> Your Dashboard
+            </a>
+            <a href="leaderboard.html" class="active">
+                <span class="material-icons">leaderboard</span> Leaderboard
+            </a>
+            <a href="insights.html">
+                <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
+        </nav>
+
+        <div class="utility-section">
+            <button id="mode-toggle" onclick="toggleDarkMode()">
+                <span class="material-icons">dark_mode</span> Dark Mode
+            </button>
+            <a href="login.html" class="logout">
+                <span class="material-icons">logout</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="dashboard-header">
+            <h2>Leaderboard</h2>
+            <p>Rank, filter, and reward your team members</p>
+        </header>
+
+        <div class="filter-bar">
+            <div class="search-bar" style="max-width: 300px;">
+                <span class="material-icons">search</span>
+                <input type="text" placeholder="Search employee by name or role...">
+            </div>
+            
+            <div class="dropdown" id="role-filter">
+                <button class="dropdown-btn">
+                    <span class="material-icons icon-sm">work</span> All Roles <span class="material-icons icon-sm">arrow_drop_down</span>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#">All Roles</a>
+                    <a href="#">Frontend Developer</a>
+                    <a href="#">Backend Developer</a>
+                    <a href="#">UI/UX Designer</a>
+                    <a href="#">DevOps Engineer</a>
+                </div>
+            </div>
+
+            <div class="dropdown" id="sort-filter">
+                <button class="dropdown-btn">
+                    <span class="material-icons icon-sm">sort</span> Highest Score <span class="material-icons icon-sm">arrow_drop_down</span>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#">Highest Score</a>
+                    <a href="#">Most Commits</a>
+                    <a href="#">Most Improved</a>
+                    <a href="#">AI Recommended</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-reflection-box">
+            <h4><span class="material-icons icon-blue">auto_fix_high</span> AI Tip:</h4>
+            <p style="font-weight: 600;">Priya Singh's collaboration score rose 15% this week. Consider rewarding for team contribution.</p>
+        </div>
+
+        <div class="leaderboard-list">
+            
+            <div class="leaderboard-item top-performer">
+                <div class="rank-badge">
+                    <span class="material-icons icon-orange">emoji_events</span>
+                </div>
+                <div class="employee-details">
+                    <div class="initials yellow-initials">AS</div>
+                    <div class="employee-text">
+                        <h4>Aarav Sharma</h4>
+                        <p>Frontend Developer</p>
+                    </div>
+                </div>
+                <div class="performance-metrics">
+                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 42 hrs/week</div>
+                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 58 Commits</div>
+                </div>
+                <div class="leaderboard-score green-bg">Score: 95/100</div>
+                <button class="reward-btn" onclick="openRewardModal('Aarav Sharma')">Reward</button>
+            </div>
+
+            <div class="leaderboard-item">
+                <div class="rank-badge">#2</div>
+                <div class="employee-details">
+                    <div class="initials">NP</div>
+                    <div class="employee-text">
+                        <h4>Neha Patel</h4>
+                        <p>Backend Developer</p>
+                    </div>
+                </div>
+                <div class="performance-metrics">
+                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 40 hrs/week</div>
+                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 58 Commits</div>
+                </div>
+                <div class="leaderboard-score green-bg">Score: 91/100</div>
+                <button class="reward-btn" onclick="openRewardModal('Neha Patel')">Reward</button>
+            </div>
+            
+             <div class="leaderboard-item">
+                <div class="rank-badge">#3</div>
+                <div class="employee-details">
+                    <div class="initials purple-initials">RV</div>
+                    <div class="employee-text">
+                        <h4>Rahul Verma</h4>
+                        <p>DevOps Engineer</p>
+                    </div>
+                </div>
+                <div class="performance-metrics">
+                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 38 hrs/week</div>
+                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 45 Commits</div>
+                </div>
+                <div class="leaderboard-score yellow-bg">Score: 84/100</div>
+                <button class="reward-btn" onclick="openRewardModal('Rahul Verma')">Reward</button>
+            </div>
+            
+        </div>
+
+    </main>
+    
+    <div id="rewardModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRewardModal()">&times;</span>
+            <h3>Reward Employee</h3>
+            <p>Give a bonus to <strong id="reward-employee-name">Aarav Sharma</strong></p>
+
+            <div class="input-group">
+                <label for="bonusAmount">Bonus Amount (₹)</label>
+                <input type="number" id="bonusAmount" value="5000" min="100" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="bonusNote">Note (Optional)</label>
+                <textarea id="bonusNote" rows="3" placeholder="Bonus for exceptional performance this week..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="cancel" onclick="closeRewardModal()">Cancel</button>
+                <button class="confirm-reward-btn" onclick="confirmReward()">Confirm Reward</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Dark Mode Toggle
+        const body = document.body;
+        const modeToggle = document.getElementById('mode-toggle');
+        
+        function toggleDarkMode() {
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            const iconSpan = modeToggle.querySelector('.material-icons');
+            
+            if (isDarkMode) {
+                iconSpan.textContent = 'light_mode';
+                modeToggle.lastChild.textContent = ' Light Mode';
+            } else {
+                iconSpan.textContent = 'dark_mode';
+                modeToggle.lastChild.textContent = ' Dark Mode';
+            }
+        }
+        
+        // Dropdown Toggle Logic
+        document.querySelectorAll('.dropdown').forEach(dropdown => {
+            const button = dropdown.querySelector('.dropdown-btn');
+            const menu = dropdown.querySelector('.dropdown-menu');
+
+            button.addEventListener('click', () => {
+                // Close other open menus
+                document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                    if (m !== menu) m.classList.remove('show');
+                });
+                menu.classList.toggle('show');
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!dropdown.contains(event.target)) {
+                    menu.classList.remove('show');
+                }
+            });
+        });
+
+        // Reward Modal Logic
+        const rewardModal = document.getElementById('rewardModal');
+        const rewardEmployeeName = document.getElementById('reward-employee-name');
+
+        function openRewardModal(employeeName) {
+            rewardEmployeeName.textContent = employeeName;
+            rewardModal.style.display = 'block';
+        }
+
+        function closeRewardModal() {
+            rewardModal.style.display = 'none';
+        }
+
+        function confirmReward() {
+            const name = rewardEmployeeName.textContent;
+            const amount = document.getElementById('bonusAmount').value;
+            const note = document.getElementById('bonusNote').value;
+            
+            console.log(Reward confirmed for ${name}: ₹${amount} for reason: "${note}");
+            alert(Reward confirmed for ${name}: ₹${amount});
+            closeRewardModal();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == rewardModal) {
+                closeRewardModal();
+            }
+        }
+
+    </script>
+</body>
+</html>
