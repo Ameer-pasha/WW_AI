@@ -120,7 +120,6 @@ def login_required(view):
 # ======================================================
 # 4. ROUTES
 # ======================================================
-
 @app.route('/')
 def index():
     return redirect(url_for('login'))
@@ -166,14 +165,11 @@ def forgot_password():
 @login_required
 def your_dashboard():
     user = get_user_by_id(session['user_id'])
+    if user.role != 'Employee':
+        flash('You do not have permission to view this dashboard.', 'danger')
+        return redirect(url_for('team_dashboard'))
 
-    # Both Employees and Managers use the same dashboard template
-    if user.role in ['Employee', 'Manager']:
-        return render_template('your_dashboard.html', user=user, current_page='your_dashboard')
-
-    # Fallback for any other role
-    flash('You do not have permission to view this dashboard.', 'danger')
-    return redirect(url_for('login'))
+    return render_template('your_dashboard.html', user=user, current_page='your_dashboard')
 
 
 @app.route('/team-dashboard')
