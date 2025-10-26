@@ -6,6 +6,7 @@
     <title>WorkWise AI - Your Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     {# Flask standard for linking static files: url_for('static', filename='...') #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
@@ -95,41 +96,43 @@
             <p>{{ ai_reflection }}</p>
         </div>
 
-        <div class="content-box">
-            <h3 style="margin-top: 0;">Recent Leadership Activities</h3>
-
-            {# Loop through the recent_activities data #}
-            {% for activity in recent_activities %}
-            <div class="activity-item">
-                <div class="dot {{ activity.dot_class }}"></div>
-                <div class="text">
-                    <h5>{{ activity.title }}</h5>
-                    <p>{{ activity.time_ago }}</p>
-                </div>
-            </div>
-            {% endfor %}
-
-        </div>
         
     </main>
 
-    <script>
-        const body = document.body;
-        const modeToggle = document.getElementById('mode-toggle');
-        
-        function toggleDarkMode() {
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            const iconSpan = modeToggle.querySelector('.material-icons');
-            
-            if (isDarkMode) {
-                iconSpan.textContent = 'light_mode';
-                modeToggle.lastChild.textContent = ' Light Mode';
-            } else {
-                iconSpan.textContent = 'dark_mode';
-                modeToggle.lastChild.textContent = ' Dark Mode';
-            }
+<script>
+    const body = document.body;
+    const modeToggle = document.getElementById('mode-toggle');
+
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            updateToggleButton(true);
         }
-    </script>
+    });
+
+    function toggleDarkMode() {
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+
+        // Save preference to localStorage
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+        updateToggleButton(isDarkMode);
+    }
+
+    function updateToggleButton(isDarkMode) {
+        const iconSpan = modeToggle.querySelector('.material-icons');
+
+        if (isDarkMode) {
+            iconSpan.textContent = 'light_mode';
+            modeToggle.childNodes[1].textContent = ' Light Mode';
+        } else {
+            iconSpan.textContent = 'dark_mode';
+            modeToggle.childNodes[1].textContent = ' Dark Mode';
+        }
+    }
+</script>
 </body>
 </html>

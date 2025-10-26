@@ -6,6 +6,7 @@
     <title>WorkWise AI - Leaderboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     {# Flask standard for linking static files: url_for('static', filename='...') #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
@@ -108,17 +109,24 @@
                         <p>{{ employee.role }}</p>
                     </div>
                 </div>
-                <div class="performance-metrics">
-                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> {{ employee.work_hours }} hrs/week</div>
-                    <div class="metric-item"><span class="material-icons icon-grey">code</span> {{ employee.commits }} Commits</div>
-                </div>
-                <div class="leaderboard-score {{ employee.score_class }}">Score: {{ employee.score }}/100</div>
-                {# The onclick handler passes the employee's name #}
-                <button class="reward-btn" onclick="openRewardModal('{{ employee.name }}')">Reward</button>
-            </div>
-            {% endfor %}
+            <div class="performance-metrics">
+            <div class="metric-item">
+                            <span class="material-icons icon-grey">code</span> {{ employee.commits }} Commits
+                        </div>
+                    </div>
 
-        </div>
+                    <div class="leaderboard-score {{ employee.score_class }}">
+                        Score: {{ employee.score }}/100
+                    </div>
+
+                    <!-- Reward button with onclick -->
+                    <button class="reward-btn" onclick="openRewardModal('{{ employee.name }}')">
+                        Reward
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
 
     </main>
 
@@ -148,73 +156,114 @@
 
 
     <script>
-        // Dark Mode Toggle
-        const body = document.body;
-        const modeToggle = document.getElementById('mode-toggle');
 
-        function toggleDarkMode() {
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            const iconSpan = modeToggle.querySelector('.material-icons');
+    // ========== Dark Mode Toggle with Persistence ==========
+    const body = document.body;
+    const modeToggle = document.getElementById('mode-toggle');
 
-            if (isDarkMode) {
-                iconSpan.textContent = 'light_mode';
-                modeToggle.lastChild.textContent = ' Light Mode';
-            } else {
-                iconSpan.textContent = 'dark_mode';
-                modeToggle.lastChild.textContent = ' Dark Mode';
-            }
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            updateToggleButton(true);
         }
+    });
 
-        // Dropdown Toggle Logic
-        document.querySelectorAll('.dropdown').forEach(dropdown => {
-            const button = dropdown.querySelector('.dropdown-btn');
-            const menu = dropdown.querySelector('.dropdown-menu');
+    function toggleDarkMode() {
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
 
-            button.addEventListener('click', () => {
-                // Close other open menus
-                document.querySelectorAll('.dropdown-menu.show').forEach(m => {
-                    if (m !== menu) m.classList.remove('show');
-                });
-                menu.classList.toggle('show');
+        // Save preference to localStorage
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+        updateToggleButton(isDarkMode);
+    }
+
+    function updateToggleButton(isDarkMode) {
+        const iconSpan = modeToggle.querySelector('.material-icons');
+
+        if (isDarkMode) {
+            iconSpan.textContent = 'light_mode';
+            modeToggle.childNodes[1].textContent = ' Light Mode';
+        } else {
+            iconSpan.textContent = 'dark_mode';
+            modeToggle.childNodes[1].textContent = ' Dark Mode';
+        }
+    }
+
+    // ========== Dropdown Toggle Logic ==========
+    document.querySelectorAll('.dropdown').forEach(dropdown => {
+        const button = dropdown.querySelector('.dropdown-btn');
+        const menu = dropdown.querySelector('.dropdown-menu');
+
+        button.addEventListener('click', () => {
+            // Close other open menus
+            document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
             });
-
-            document.addEventListener('click', (event) => {
-                if (!dropdown.contains(event.target)) {
-                    menu.classList.remove('show');
-                }
-            });
+            menu.classList.toggle('show');
         });
 
-        // Reward Modal Logic
-        const rewardModal = document.getElementById('rewardModal');
-        const rewardEmployeeName = document.getElementById('reward-employee-name');
+        document.addEventListener('click', (event) => {
+            if (!dropdown.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+    });
 
-        function openRewardModal(employeeName) {
-            rewardEmployeeName.textContent = employeeName;
-            rewardModal.style.display = 'block';
-        }
+    // ========== Reward Modal Logic ==========
+    const rewardModal = document.getElementById('rewardModal');
+    const rewardEmployeeName = document.getElementById('reward-employee-name');
 
-        function closeRewardModal() {
-            rewardModal.style.display = 'none';
-        }
+    function openRewardModal(employeeName) {
+        rewardEmployeeName.textContent = employeeName;
+        rewardModal.style.display = 'block';
+    }
 
-        function confirmReward() {
-            const name = rewardEmployeeName.textContent;
-            const amount = document.getElementById('bonusAmount').value;
-            const note = document.getElementById('bonusNote').value;
+    function closeRewardModal() {
+        rewardModal.style.display = 'none';
+    }
 
-            console.log(`Reward confirmed for ${name}: ₹${amount} for reason: "${note}"`);
-            alert(`Reward confirmed for ${name}: ₹${amount}`);
+    function confirmReward() {
+        const name = rewardEmployeeName.textContent;
+        const amount = document.getElementById('bonusAmount').value;
+        const note = document.getElementById('bonusNote').value;
+
+        // Send to backend
+        fetch('/reward-employee', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                employee_name: name,
+                bonus_amount: parseFloat(amount),
+                note: note
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`✅ ${data.message}`);
+                closeRewardModal();
+                // Optional: Reload page to update data
+                // window.location.reload();
+            } else {
+                alert(`❌ Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('❌ Failed to process reward');
+        });
+    }
+
+    window.onclick = function(event) {
+        if (event.target == rewardModal) {
             closeRewardModal();
         }
-
-        window.onclick = function(event) {
-            if (event.target == rewardModal) {
-                closeRewardModal();
-            }
-        }
-
-    </script>
+    }
+</script>
 </body>
 </html>

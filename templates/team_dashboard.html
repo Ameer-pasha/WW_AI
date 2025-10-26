@@ -104,14 +104,24 @@
                 {# Loop through the employee_list data #}
                 {% for employee in employee_list %}
                 <div class="employee-card" onclick="window.location.href='{{ url_for('employee_detail', employee_id=employee.id) }}'">
-                    <div class="employee-initials">{{ employee.initials }}</div>
+                    <!-- Initials computed inline -->
+                    <div class="employee-initials">
+                        {{ employee.name.split()[0][0] }}{{ employee.name.split()[1][0] if employee.name.split()|length > 1 else '' }}
+                    </div>
+
+                    <!-- Employee info -->
                     <div class="employee-info">
                         <h4>{{ employee.name }}</h4>
                         <p>{{ employee.role }}</p>
                     </div>
-                    <div class="employee-score {{ employee.score_color }}">{{ employee.score }}</div>
+
+                    <!-- Score with dynamic color -->
+                    <div class="employee-score {% if employee.score >= 85 %}green{% elif employee.score >= 70 %}yellow{% else %}red{% endif %}">
+                        {{ employee.score }}
+                    </div>
                 </div>
                 {% endfor %}
+
 
                 {# This hidden div is for layout padding/alignment, kept static #}
                 <div class="employee-card" style="visibility: hidden; pointer-events: none;"></div>
@@ -122,23 +132,40 @@
 
     </main>
 
-    <script>
-        const body = document.body;
-        const modeToggle = document.getElementById('mode-toggle');
-        
-        function toggleDarkMode() {
-            body.classList.toggle('dark-mode');
-            const isDarkMode = body.classList.contains('dark-mode');
-            const iconSpan = modeToggle.querySelector('.material-icons');
-            
-            if (isDarkMode) {
-                iconSpan.textContent = 'light_mode';
-                modeToggle.lastChild.textContent = ' Light Mode';
-            } else {
-                iconSpan.textContent = 'dark_mode';
-                modeToggle.lastChild.textContent = ' Dark Mode';
-            }
+<script>
+    const body = document.body;
+    const modeToggle = document.getElementById('mode-toggle');
+
+    // Load saved theme on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            updateToggleButton(true);
         }
-    </script>
+    });
+
+    function toggleDarkMode() {
+        body.classList.toggle('dark-mode');
+        const isDarkMode = body.classList.contains('dark-mode');
+
+        // Save preference to localStorage
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+
+        updateToggleButton(isDarkMode);
+    }
+
+    function updateToggleButton(isDarkMode) {
+        const iconSpan = modeToggle.querySelector('.material-icons');
+
+        if (isDarkMode) {
+            iconSpan.textContent = 'light_mode';
+            modeToggle.childNodes[1].textContent = ' Light Mode';
+        } else {
+            iconSpan.textContent = 'dark_mode';
+            modeToggle.childNodes[1].textContent = ' Dark Mode';
+        }
+    }
+</script>
 </body>
 </html>
