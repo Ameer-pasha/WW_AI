@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkWise AI - Team Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body class="light-mode">
+
+    <aside class="sidebar">
+        <div class="logo-section">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
+            </svg>
+            <h1>WorkWise AI</h1>
+            <p>Manager Portal</p>
+        </div>
+
+        <nav class="nav-links">
+            <a href="teamdashboard.html" class="active">
+                <span class="material-icons">dashboard</span> Team Dashboard
+            </a>
+            <a href="yourdashboard.html">
+                <span class="material-icons">person</span> Your Dashboard
+            </a>
+            <a href="leaderboard.html">
+                <span class="material-icons">leaderboard</span> Leaderboard
+            </a>
+            <a href="insights.html">
+                <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
+        </nav>
+
+        <div class="utility-section">
+            <button id="mode-toggle" onclick="toggleDarkMode()">
+                <span class="material-icons">dark_mode</span> Dark Mode
+            </button>
+            <a href="login.html" class="logout">
+                <span class="material-icons">logout</span> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="dashboard-header">
+            <h2>Team Dashboard</h2>
+            <p>Overview of your team's performance and metrics</p>
+        </header>
+
+        <div class="summary-cards">
+            
+            <div class="card team-members">
+                <div class="card-title">
+                    <span class="material-icons card-icon">groups</span> Team Members
+                </div>
+                <div class="card-main-value">208</div>
+                <p class="card-subtitle">Active members</p>
+            </div>
+
+            <div class="card goals-completed">
+                <div class="card-title">
+                    <span class="material-icons card-icon">adjust</span> Goals Completed
+                </div>
+                <div class="card-main-value">2 / 5</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 40%;"></div>
+                </div>
+                <p class="card-subtitle">40% Completed</p>
+            </div>
+
+            <div class="card bonus-allocated">
+                <div class="card-title">
+                    <span class="material-icons card-icon">attach_money</span> Bonus Allocated
+                </div>
+                <div class="card-main-value green-text">₹1,25,000</div>
+                <p class="card-subtitle">This month</p>
+            </div>
+
+            <div class="card attention-needed">
+                <div class="card-title">
+                    <span class="material-icons card-icon">error_outline</span> Attention Needed
+                </div>
+                <div class="card-main-value red-text">5</div>
+                <p class="card-subtitle">Employees</p>
+            </div>
+
+        </div>
+
+        <div class="content-box graph-section">
+            <div class="graph-header">
+                <h3>Team Performance Trend</h3>
+                <p>Monthly comparison</p>
+            </div>
+            <div class="chart-placeholder">
+                Line Graph Placeholder: Current Month (Green) vs Previous Month (Blue)
+                <div class="chart-legend">
+                    <span class="current">Current Month</span> • <span class="previous">Previous Month</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-box search-section">
+            <div class="search-header">
+                <h3>Search Your Employees</h3>
+                <p>Find and view detailed analytics</p>
+            </div>
+            
+            <div class="search-bar">
+                <span class="material-icons">search</span>
+                <input type="text" placeholder="Search employee by name or role...">
+            </div>
+            
+            <div class="employee-results">
+                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
+                    <div class="employee-initials">AS</div>
+                    <div class="employee-info">
+                        <h4>Aarav Sharma</h4>
+                        <p>Frontend Developer</p>
+                    </div>
+                    <div class="employee-score green">95</div>
+                </div>
+
+                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
+                    <div class="employee-initials">NP</div>
+                    <div class="employee-info">
+                        <h4>Neha Patel</h4>
+                        <p>Backend Developer</p>
+                    </div>
+                    <div class="employee-score green">91</div>
+                </div>
+
+                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
+                    <div class="employee-initials">PS</div>
+                    <div class="employee-info">
+                        <h4>Priya Singh</h4>
+                        <p>UI/UX Designer</p>
+                    </div>
+                    <div class="employee-score yellow">88</div>
+                </div>
+
+                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
+                    <div class="employee-initials">RV</div>
+                    <div class="employee-info">
+                        <h4>Rahul Verma</h4>
+                        <p>DevOps Engineer</p>
+                    </div>
+                    <div class="employee-score yellow">84</div>
+                </div>
+
+                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
+                    <div class="employee-initials">SR</div>
+                    <div class="employee-info">
+                        <h4>Sneha Reddy</h4>
+                        <p>Product Manager</p>
+                    </div>
+                    <div class="employee-score yellow">82</div>
+                </div>
+                
+                <div class="employee-card" style="visibility: hidden; pointer-events: none;"></div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const body = document.body;
+        const modeToggle = document.getElementById('mode-toggle');
+        
+        function toggleDarkMode() {
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            const iconSpan = modeToggle.querySelector('.material-icons');
+            
+            if (isDarkMode) {
+                iconSpan.textContent = 'light_mode';
+                modeToggle.lastChild.textContent = ' Light Mode';
+            } else {
+                iconSpan.textContent = 'dark_mode';
+                modeToggle.lastChild.textContent = ' Dark Mode';
+            }
+        }
+    </script>
+</body>
+</html>
