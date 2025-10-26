@@ -6,8 +6,10 @@
     <title>WorkWise AI - Leaderboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/styles.css">
+    {# Flask standard for linking static files: url_for('static', filename='...') #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
+
 <body class="light-mode">
 
     <aside class="sidebar">
@@ -20,16 +22,16 @@
         </div>
 
         <nav class="nav-links">
-            <a href="teamdashboard.html">
+            <a href="{{ url_for('team_dashboard') }}">
                 <span class="material-icons">dashboard</span> Team Dashboard
             </a>
-            <a href="yourdashboard.html">
+            <a href="{{ url_for('your_dashboard') }}">
                 <span class="material-icons">person</span> Your Dashboard
             </a>
-            <a href="leaderboard.html" class="active">
+            <a href="{{ url_for('leaderboard') }}" class="active">
                 <span class="material-icons">leaderboard</span> Leaderboard
             </a>
-            <a href="insights.html">
+            <a href="{{ url_for('insights') }}">
                 <span class="material-icons">auto_fix_high</span> AI Insights
             </a>
         </nav>
@@ -38,14 +40,14 @@
             <button id="mode-toggle" onclick="toggleDarkMode()">
                 <span class="material-icons">dark_mode</span> Dark Mode
             </button>
-            <a href="login.html" class="logout">
+            <a href="{{ url_for('logout') }}" class="logout">
                 <span class="material-icons">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <main class="main-content">
-        
+
         <header class="dashboard-header">
             <h2>Leaderboard</h2>
             <p>Rank, filter, and reward your team members</p>
@@ -56,113 +58,87 @@
                 <span class="material-icons">search</span>
                 <input type="text" placeholder="Search employee by name or role...">
             </div>
-            
+
             <div class="dropdown" id="role-filter">
                 <button class="dropdown-btn">
-                    <span class="material-icons icon-sm">work</span> All Roles <span class="material-icons icon-sm">arrow_drop_down</span>
+                    <span class="material-icons icon-sm">work</span> {{ current_role_filter }} <span class="material-icons icon-sm">arrow_drop_down</span>
                 </button>
                 <div class="dropdown-menu">
-                    <a href="#">All Roles</a>
-                    <a href="#">Frontend Developer</a>
-                    <a href="#">Backend Developer</a>
-                    <a href="#">UI/UX Designer</a>
-                    <a href="#">DevOps Engineer</a>
+                    {# Loop through available role filters #}
+                    {% for role in roles_filter %}
+                    <a href="{{ url_for('leaderboard', role=role) }}">{{ role }}</a>
+                    {% endfor %}
                 </div>
             </div>
 
             <div class="dropdown" id="sort-filter">
                 <button class="dropdown-btn">
-                    <span class="material-icons icon-sm">sort</span> Highest Score <span class="material-icons icon-sm">arrow_drop_down</span>
+                    <span class="material-icons icon-sm">sort</span> {{ current_sort_filter }} <span class="material-icons icon-sm">arrow_drop_down</span>
                 </button>
                 <div class="dropdown-menu">
-                    <a href="#">Highest Score</a>
-                    <a href="#">Most Commits</a>
-                    <a href="#">Most Improved</a>
-                    <a href="#">AI Recommended</a>
+                    {# Loop through available sort filters #}
+                    {% for sort_option in sort_options %}
+                    <a href="{{ url_for('leaderboard', sort=sort_option.key) }}">{{ sort_option.label }}</a>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        
+
         <div class="ai-reflection-box">
             <h4><span class="material-icons icon-blue">auto_fix_high</span> AI Tip:</h4>
-            <p style="font-weight: 600;">Priya Singh's collaboration score rose 15% this week. Consider rewarding for team contribution.</p>
+            <p style="font-weight: 600;">{{ ai_tip.text }}</p>
         </div>
 
         <div class="leaderboard-list">
-            
-            <div class="leaderboard-item top-performer">
-                <div class="rank-badge">
-                    <span class="material-icons icon-orange">emoji_events</span>
-                </div>
-                <div class="employee-details">
-                    <div class="initials yellow-initials">AS</div>
-                    <div class="employee-text">
-                        <h4>Aarav Sharma</h4>
-                        <p>Frontend Developer</p>
-                    </div>
-                </div>
-                <div class="performance-metrics">
-                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 42 hrs/week</div>
-                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 58 Commits</div>
-                </div>
-                <div class="leaderboard-score green-bg">Score: 95/100</div>
-                <button class="reward-btn" onclick="openRewardModal('Aarav Sharma')">Reward</button>
-            </div>
 
-            <div class="leaderboard-item">
-                <div class="rank-badge">#2</div>
+            {# Loop through the list of employees for the leaderboard #}
+            {% for employee in leaderboard_data %}
+            <div class="leaderboard-item {% if employee.rank == 1 %}top-performer{% endif %}">
+                <div class="rank-badge">
+                    {% if employee.rank == 1 %}
+                    <span class="material-icons icon-orange">emoji_events</span>
+                    {% else %}
+                    #{{ employee.rank }}
+                    {% endif %}
+                </div>
                 <div class="employee-details">
-                    <div class="initials">NP</div>
+                    <div class="initials {{ employee.initials_class }}">{{ employee.initials }}</div>
                     <div class="employee-text">
-                        <h4>Neha Patel</h4>
-                        <p>Backend Developer</p>
+                        <h4>{{ employee.name }}</h4>
+                        <p>{{ employee.role }}</p>
                     </div>
                 </div>
                 <div class="performance-metrics">
-                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 40 hrs/week</div>
-                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 58 Commits</div>
+                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> {{ employee.work_hours }} hrs/week</div>
+                    <div class="metric-item"><span class="material-icons icon-grey">code</span> {{ employee.commits }} Commits</div>
                 </div>
-                <div class="leaderboard-score green-bg">Score: 91/100</div>
-                <button class="reward-btn" onclick="openRewardModal('Neha Patel')">Reward</button>
+                <div class="leaderboard-score {{ employee.score_class }}">Score: {{ employee.score }}/100</div>
+                {# The onclick handler passes the employee's name #}
+                <button class="reward-btn" onclick="openRewardModal('{{ employee.name }}')">Reward</button>
             </div>
-            
-             <div class="leaderboard-item">
-                <div class="rank-badge">#3</div>
-                <div class="employee-details">
-                    <div class="initials purple-initials">RV</div>
-                    <div class="employee-text">
-                        <h4>Rahul Verma</h4>
-                        <p>DevOps Engineer</p>
-                    </div>
-                </div>
-                <div class="performance-metrics">
-                    <div class="metric-item"><span class="material-icons icon-grey">work_history</span> 38 hrs/week</div>
-                    <div class="metric-item"><span class="material-icons icon-grey">code</span> 45 Commits</div>
-                </div>
-                <div class="leaderboard-score yellow-bg">Score: 84/100</div>
-                <button class="reward-btn" onclick="openRewardModal('Rahul Verma')">Reward</button>
-            </div>
-            
+            {% endfor %}
+
         </div>
 
     </main>
-    
+
+    {# Modal is static but interacts with dynamic data via JavaScript #}
     <div id="rewardModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeRewardModal()">&times;</span>
             <h3>Reward Employee</h3>
-            <p>Give a bonus to <strong id="reward-employee-name">Aarav Sharma</strong></p>
+            <p>Give a bonus to <strong id="reward-employee-name"></strong></p>
 
             <div class="input-group">
                 <label for="bonusAmount">Bonus Amount (₹)</label>
                 <input type="number" id="bonusAmount" value="5000" min="100" required>
             </div>
-            
+
             <div class="input-group">
                 <label for="bonusNote">Note (Optional)</label>
                 <textarea id="bonusNote" rows="3" placeholder="Bonus for exceptional performance this week..."></textarea>
             </div>
-            
+
             <div class="modal-actions">
                 <button class="cancel" onclick="closeRewardModal()">Cancel</button>
                 <button class="confirm-reward-btn" onclick="confirmReward()">Confirm Reward</button>
@@ -175,12 +151,12 @@
         // Dark Mode Toggle
         const body = document.body;
         const modeToggle = document.getElementById('mode-toggle');
-        
+
         function toggleDarkMode() {
             body.classList.toggle('dark-mode');
             const isDarkMode = body.classList.contains('dark-mode');
             const iconSpan = modeToggle.querySelector('.material-icons');
-            
+
             if (isDarkMode) {
                 iconSpan.textContent = 'light_mode';
                 modeToggle.lastChild.textContent = ' Light Mode';
@@ -189,7 +165,7 @@
                 modeToggle.lastChild.textContent = ' Dark Mode';
             }
         }
-        
+
         // Dropdown Toggle Logic
         document.querySelectorAll('.dropdown').forEach(dropdown => {
             const button = dropdown.querySelector('.dropdown-btn');
@@ -227,9 +203,9 @@
             const name = rewardEmployeeName.textContent;
             const amount = document.getElementById('bonusAmount').value;
             const note = document.getElementById('bonusNote').value;
-            
-            console.log(Reward confirmed for ${name}: ₹${amount} for reason: "${note}");
-            alert(Reward confirmed for ${name}: ₹${amount});
+
+            console.log(`Reward confirmed for ${name}: ₹${amount} for reason: "${note}"`);
+            alert(`Reward confirmed for ${name}: ₹${amount}`);
             closeRewardModal();
         }
 

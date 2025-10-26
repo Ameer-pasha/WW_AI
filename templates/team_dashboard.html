@@ -6,7 +6,8 @@
     <title>WorkWise AI - Team Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/styles.css">
+    {# Flask standard for linking static files: url_for('static', filename='...') #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="light-mode">
 
@@ -20,16 +21,17 @@
         </div>
 
         <nav class="nav-links">
-            <a href="teamdashboard.html" class="active">
+            <a href="{{ url_for('team_dashboard') }}" class="active">
                 <span class="material-icons">dashboard</span> Team Dashboard
             </a>
-            <a href="yourdashboard.html">
-                <span class="material-icons">person</span> Your Dashboard
+
+
+            <a href="{{ url_for('your_dashboard') }}" class="btn btn-primary">                <span class="material-icons">person</span> Your Dashboard
             </a>
-            <a href="leaderboard.html">
+            <a href="{{ url_for('leaderboard') }}">
                 <span class="material-icons">leaderboard</span> Leaderboard
             </a>
-            <a href="insights.html">
+            <a href="{{ url_for('insights') }}">
                 <span class="material-icons">auto_fix_high</span> AI Insights
             </a>
         </nav>
@@ -38,55 +40,39 @@
             <button id="mode-toggle" onclick="toggleDarkMode()">
                 <span class="material-icons">dark_mode</span> Dark Mode
             </button>
-            <a href="login.html" class="logout">
+            <a href="{{ url_for('logout') }}" class="logout">
                 <span class="material-icons">logout</span> Logout
             </a>
         </div>
     </aside>
 
     <main class="main-content">
-        
+
         <header class="dashboard-header">
             <h2>Team Dashboard</h2>
             <p>Overview of your team's performance and metrics</p>
         </header>
 
         <div class="summary-cards">
-            
-            <div class="card team-members">
-                <div class="card-title">
-                    <span class="material-icons card-icon">groups</span> Team Members
-                </div>
-                <div class="card-main-value">208</div>
-                <p class="card-subtitle">Active members</p>
-            </div>
 
-            <div class="card goals-completed">
+            {# Loop through the summary_cards data #}
+            {% for card in summary_cards %}
+            <div class="card {{ card.css_class }}">
                 <div class="card-title">
-                    <span class="material-icons card-icon">adjust</span> Goals Completed
+                    <span class="material-icons card-icon">{% if card.icon %}{{ card.icon }}{% endif %}</span> {{ card.title }}
                 </div>
-                <div class="card-main-value">2 / 5</div>
+                <div class="card-main-value {% if card.value_class %}{{ card.value_class }}{% endif %}">{{ card.main_value }}</div>
+
+                {% if card.progress_max %}
+                {# Conditional progress bar for Goals Completed #}
                 <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: 40%;"></div>
+                    <div class="progress-bar" style="width: {{ card.progress_percent }}%;"></div>
                 </div>
-                <p class="card-subtitle">40% Completed</p>
-            </div>
+                {% endif %}
 
-            <div class="card bonus-allocated">
-                <div class="card-title">
-                    <span class="material-icons card-icon">attach_money</span> Bonus Allocated
-                </div>
-                <div class="card-main-value green-text">₹1,25,000</div>
-                <p class="card-subtitle">This month</p>
+                <p class="card-subtitle">{{ card.subtitle }}</p>
             </div>
-
-            <div class="card attention-needed">
-                <div class="card-title">
-                    <span class="material-icons card-icon">error_outline</span> Attention Needed
-                </div>
-                <div class="card-main-value red-text">5</div>
-                <p class="card-subtitle">Employees</p>
-            </div>
+            {% endfor %}
 
         </div>
 
@@ -102,64 +88,32 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="content-box search-section">
             <div class="search-header">
                 <h3>Search Your Employees</h3>
                 <p>Find and view detailed analytics</p>
             </div>
-            
+
             <div class="search-bar">
                 <span class="material-icons">search</span>
                 <input type="text" placeholder="Search employee by name or role...">
             </div>
-            
+
             <div class="employee-results">
-                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
-                    <div class="employee-initials">AS</div>
+                {# Loop through the employee_list data #}
+                {% for employee in employee_list %}
+                <div class="employee-card" onclick="window.location.href='{{ url_for('employee_detail', employee_id=employee.id) }}'">
+                    <div class="employee-initials">{{ employee.initials }}</div>
                     <div class="employee-info">
-                        <h4>Aarav Sharma</h4>
-                        <p>Frontend Developer</p>
+                        <h4>{{ employee.name }}</h4>
+                        <p>{{ employee.role }}</p>
                     </div>
-                    <div class="employee-score green">95</div>
+                    <div class="employee-score {{ employee.score_color }}">{{ employee.score }}</div>
                 </div>
+                {% endfor %}
 
-                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
-                    <div class="employee-initials">NP</div>
-                    <div class="employee-info">
-                        <h4>Neha Patel</h4>
-                        <p>Backend Developer</p>
-                    </div>
-                    <div class="employee-score green">91</div>
-                </div>
-
-                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
-                    <div class="employee-initials">PS</div>
-                    <div class="employee-info">
-                        <h4>Priya Singh</h4>
-                        <p>UI/UX Designer</p>
-                    </div>
-                    <div class="employee-score yellow">88</div>
-                </div>
-
-                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
-                    <div class="employee-initials">RV</div>
-                    <div class="employee-info">
-                        <h4>Rahul Verma</h4>
-                        <p>DevOps Engineer</p>
-                    </div>
-                    <div class="employee-score yellow">84</div>
-                </div>
-
-                <div class="employee-card" onclick="window.location.href='employee-detail-view.html'">
-                    <div class="employee-initials">SR</div>
-                    <div class="employee-info">
-                        <h4>Sneha Reddy</h4>
-                        <p>Product Manager</p>
-                    </div>
-                    <div class="employee-score yellow">82</div>
-                </div>
-                
+                {# This hidden div is for layout padding/alignment, kept static #}
                 <div class="employee-card" style="visibility: hidden; pointer-events: none;"></div>
 
             </div>

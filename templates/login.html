@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkWise AI - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../static/css/styles.css">
+    {# CRITICAL CHANGE: Use Flask's url_for function to link the CSS #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="login-body">
 
@@ -14,29 +15,49 @@
             <svg class="login-logo" width="40" height="40" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
             </svg>
+            <h1 class="welcome-text">WorkWise AI</h1>
             <p class="tagline">Empowering Performance with Intelligence</p>
             <h3 class="welcome-text">Welcome Back</h3>
             <p class="role-select-text">Select your role and login to continue</p>
         </div>
+
+        {# Display Flash Messages (Success/Danger alerts) #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages-container">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
         <div class="selector-tabs">
             <button id="employee-tab" onclick="setLoginType('Employee')">Employee Login</button>
             <button id="manager-tab" class="active" onclick="setLoginType('Manager')">Manager Login</button>
         </div>
 
-        <form id="login-form">
+        {# CRITICAL CHANGE: Form action points to Flask route and method is POST #}
+        <form id="login-form" method="POST" action="{{ url_for('login') }}">
+
+            {# CRITICAL CHANGE: Hidden input to pass the selected role to Python #}
+            <input type="hidden" id="login-role" name="role" value="Manager">
+
             <div class="input-group">
                 <label for="email">Email / Username</label>
-                <input type="text" id="email" name="email" value="manager@workwise.ai" required>
+                <input type="text" id="email" name="email" value="manager@example.com" required>
             </div>
 
             <div class="input-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" value="" required>
+                <input type="password" id="password" name="password" required>
             </div>
 
             <div class="forgot-password">
-                <a href="#">Forgot Password?</a>
+                {# Use url_for for Flask routes #}
+                <a href="{{ url_for('forgot_password') }}">Forgot Password?</a>
             </div>
 
             <button type="submit" class="login-button">
@@ -45,20 +66,23 @@
         </form>
 
         <p class="new-user-link">New user? <a href="#">Contact admin.</a></p>
+        <small class="text-muted">Hint: Use 'manager@example.com' and 'Password123!' after running 'flask init-db'</small>
     </div>
 
     <script>
-        // Embedded JavaScript for selector functionality and form submission
+        // Embedded JavaScript for selector functionality and form data update
 
         let currentRole = 'Manager';
-        
+        const roleHiddenInput = document.getElementById('login-role');
+        const emailInput = document.getElementById('email');
+
         document.addEventListener('DOMContentLoaded', () => {
             // Initial setup to ensure Manager is active
             setLoginType('Manager');
         });
 
         /**
-         * Toggles the active state of the login tabs and updates the button text.
+         * Toggles the active state of the login tabs and updates the button text and hidden input.
          * @param {string} role - The role to set ('Manager' or 'Employee').
          */
         function setLoginType(role) {
@@ -70,25 +94,19 @@
             if (role === 'Manager') {
                 managerTab.classList.add('active');
                 employeeTab.classList.remove('active');
+                emailInput.value = 'manager@example.com';
             } else {
                 employeeTab.classList.add('active');
                 managerTab.classList.remove('active');
+                emailInput.value = 'employee@example.com'; // Placeholder example
             }
 
             roleText.textContent = role;
+            roleHiddenInput.value = role; // Crucial for sending role to Flask
         }
 
-        // Simple form submission handler (client-side only for this step)
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            event.preventDefault(); 
-            
-            // Simulating redirect based on role
-            if (currentRole === 'Manager') {
-                window.location.href = 'teamdashboard.html'; 
-            } else {
-                alert(Redirecting to Employee Dashboard. (This file not built yet));
-            }
-        });
+        // IMPORTANT: Removed client-side submit handler.
+        // The form now submits directly to the Flask server for authentication.
     </script>
 </body>
 </html>
