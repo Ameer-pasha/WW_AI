@@ -1,7 +1,7 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User
+from models import db, User,Employee, Goal, Bonus, PerformanceTrend
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
@@ -67,6 +67,57 @@ def dashboard(role):
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+
+
+@app.route('/dashboard/<role>')
+@login_required
+def dashboard(role):
+    if current_user.role != role:
+        flash('Access denied.', 'error')
+        return redirect(url_for('login'))
+
+    # Fetch dashboard metrics
+    team_members = Employee.query.count()
+    active_members = Employee.query.filter(Employee.performance_score > 0).count()  # Mock "active"
+
+    # Get current month's goal
+    current_month = "2025-04"  # You can use datetime.now().strftime("%Y-%m")
+    goal = Goal.query.filter_by(month=current_month).first()
+    goals_completed = goal.completed if goal else 0
+    goals_total = goal.target if goal else 5
+
+    # Get bonus for current month
+    bonus = Bonus.query.filter_by(month=current_month).first()
+    bonus_amount = bonus.amount if bonus else 0
+
+    # Get attention needed (low performers)
+    attention_needed = Employee.query.filter(Employee.performance_score < 80).count()
+
+    # Get performance trend data for chart
+    trends = PerformanceTrend.query.filter_by(month=current_month).order_by(PerformanceTrend.week).all()
+    weeks = [t.week for t in trends]
+    current_data = [t.current_month for t in trends]
+    previous_data = [t.previous_month for t in trends]
+
+    # Get all employees (for search section)
+    employees = Employee.query.all()
+
+    return render_template(
+        'dashboard.html',
+        role=role,
+        team_members=team_members,
+        active_members=active_members,
+        goals_completed=goals_completed,
+        goals_total=goals_total,
+        bonus_amount=bonus_amount,
+        attention_needed=attention_needed,
+        weeks=weeks,
+        current_data=current_data,
+        previous_data=previous_data,
+        employees=employees
+    )
+
 
 if __name__ == '__main__':
     app.run(debug=True)
