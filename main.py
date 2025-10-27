@@ -9,8 +9,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import func
 from functools import wraps
-# from your_app_file import db, User
-# User.query.all()  # Should list 51 users (1 manager + 50 employees)
+from flask import Flask, request, redirect
+import requests
 
 
 
@@ -963,6 +963,45 @@ def employee_performance_data(employee_id):
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/submit-work', methods=['POST'])
+@login_required
+def submit_work():
+    data = request.get_json()
+    user = User.query.get(session['user_id'])
+    employee = Employee.query.filter_by(user_id=user.id).first()
+
+    title = data.get('title')
+    description = data.get('description')
+
+    webhook_data = {
+        'employee_name': employee.name if employee else user.name,
+        'employee_position': employee.position if employee else 'Employee',
+        'title': title,
+        'description': description,
+        'timestamp': datetime.utcnow().isoformat()
+    }
+
+    try:
+        response = requests.post(
+            'https://cobra34ry.app.n8n.cloud/webhook/ai-linkedin-post',
+            json=webhook_data,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+
+
+        print("WEBHOOK RESPONSE:", response.text)   # ✅ Debug line
+        response.raise_for_status()
+
+        return jsonify({"status": "success", "message": "Work posted to LinkedIn successfully!"}), 200
+
+    except Exception as e:
+        print("WEBHOOK ERROR:", e)  # ✅ Debug line
+        return jsonify({"status": "error", "message": "Failed to post. Please try again."}), 500
+
+
 # IN FUTURE FOR DYNAMIC VALUES:
 # class GoalTracking(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
