@@ -45,8 +45,9 @@
 
         <div class="utility-section">
             <button id="mode-toggle" onclick="toggleDarkMode()">
-                <span class="material-icons">dark_mode</span> Dark Mode
-            </button>
+    <span class="material-icons">dark_mode</span> 
+    <span class="mode-text">Dark Mode</span> 
+</button>
             <a href="{{ url_for('logout') }}" class="logout">
                 <span class="material-icons">logout</span> Logout
             </a>
@@ -160,16 +161,18 @@
     }
 
     function updateToggleButton(isDarkMode) {
-        const iconSpan = modeToggle.querySelector('.material-icons');
+    const iconSpan = modeToggle.querySelector('.material-icons');
+    // CRITICAL: Target the new .mode-text span
+    const textSpan = modeToggle.querySelector('.mode-text'); 
 
-        if (isDarkMode) {
-            iconSpan.textContent = 'light_mode';
-            modeToggle.childNodes[1].textContent = ' Light Mode';
-        } else {
-            iconSpan.textContent = 'dark_mode';
-            modeToggle.childNodes[1].textContent = ' Dark Mode';
-        }
+    if (isDarkMode) {
+        iconSpan.textContent = 'light_mode';
+        textSpan.textContent = ' Light Mode'; 
+    } else {
+        iconSpan.textContent = 'dark_mode';
+        textSpan.textContent = ' Dark Mode'; 
     }
+}
 </script>
 
 <script src="{{ url_for('static', filename='js/performanceChart.js') }}"></script>

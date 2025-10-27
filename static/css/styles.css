@@ -194,6 +194,8 @@ body.dark-mode .input-group input, body.dark-mode .modal textarea {
 /* 3. DASHBOARD COMMON LAYOUT AND SIDEBAR                 */
 /* ====================================================== */
 
+
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
 .sidebar {
     width: 250px;
     background-color: var(--color-sidebar-bg);
@@ -209,8 +211,12 @@ body.dark-mode .input-group input, body.dark-mode .modal textarea {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh; /* Make the sidebar take up the full viewport height */
-    z-index: 100; /* Ensure it stays above the main content */
+    height: 100vh;
+    z-index: 100; 
+
+    /* CRITICAL LINE ADDED/KEPT */
+    min-height: 0; 
+    /* The incorrect 'overflow-y: auto' is removed here, if it was added before */
 }
 
 .logo-section {
@@ -239,7 +245,14 @@ body.dark-mode .input-group input, body.dark-mode .modal textarea {
     vertical-align: middle;
 }
 
-.nav-links { flex-grow: 1; }
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
+.nav-links { 
+    flex-grow: 1; 
+    /* ADDED: Allow only nav links to scroll */
+    overflow-y: auto;
+    /* ADDED: Spacing above the utility section */
+    padding-bottom: 20px; 
+}
 
 .nav-links a {
     display: flex;
@@ -265,10 +278,16 @@ body.dark-mode .input-group input, body.dark-mode .modal textarea {
     padding-left: 21px; 
 }
 
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
 .utility-section {
-    padding: 25px 0 0; /* Removed horizontal padding from container */
+    padding: 25px 0 0; 
     border-top: 1px solid rgba(0, 0, 0, 0.05);
-    text-align: center; /* Center the buttons inside the section */
+    text-align: center; 
+    
+    /* CRITICAL CHANGE: Add bottom padding and prevent shrinking */
+    padding-bottom: 25px; 
+    flex-shrink: 0;
 }
 
 body.dark-mode .utility-section {
@@ -276,15 +295,16 @@ body.dark-mode .utility-section {
 }
 
 
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
 .utility-section button, .utility-section a {
     /* Existing display/alignment styles */
     display: flex;
     align-items: center;
 
     /* WIDTH CONTROL: Set max width and align center using margin */
-    width: 90%; /* Smaller width for a less blocky feel */
-    max-width: 200px; /* Set a max width to keep it neat */
-    margin: 0 auto 10px auto; /* Center buttons and add bottom margin */
+    width: 90%; 
+    max-width: 200px; 
+    margin: 0 auto 10px auto; 
     
     padding: 12px 15px;
     border: none;
@@ -295,11 +315,18 @@ body.dark-mode .utility-section {
     cursor: pointer;
     color: var(--color-text-dark);
     transition: background-color 0.2s, color 0.2s;
+
+    /* ADDED: Ensures content (icon + text) is centered horizontally */
+    justify-content: center; 
+    /* ADDED: Prevents text from wrapping */
+    white-space: nowrap; 
 }
 
+/* In styles.css (Section 3: DASHBOARD COMMON LAYOUT AND SIDEBAR) */
 .utility-section a.logout {
-    margin-bottom: 0; /* Remove extra margin for the last element */
-    justify-content: center; /* Center content (icon + text) inside the logout button */
+    margin-bottom: 0; 
+    /* CRITICAL: Ensure icon and text are centered */
+    justify-content: center; 
 }
 
 .utility-section button:hover:not(.logout), .utility-section a:hover:not(.logout) {
