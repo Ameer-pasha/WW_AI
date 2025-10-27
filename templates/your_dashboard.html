@@ -149,34 +149,36 @@
 </script>
 
 <script src="{{ url_for('static', filename='js/personal-goals-chart.js') }}">
-    
 </script>
 
+
+<!-- LinkedIn Modal START -->
 <div id="linkedinModal" class="modal-linkedin">
     <div class="modal-content-linkedin">
         <span class="close-btn-linkedin" onclick="closeLinkedInModal()">&times;</span>
-        
-        <h3>Connect Your LinkedIn Profile</h3>
-        <p class="modal-description">
-            Connect your profile to import certifications, course completions, and performance reviews to enhance your WorkWise AI profile and insights.
-        </p>
+        <h3>Post Your Completed Work</h3>
+        <p class="modal-description">Share your achievements on LinkedIn through WorkWise AI automation.</p>
 
-        <div class="input-group-linkedin">
-            <label for="linkedinURL">LinkedIn Profile URL</label>
-            <input type="url" id="linkedinURL" placeholder="https://www.linkedin.com/in/username" required>
-        </div>
+        <form id="linkedinWorkForm">
+            <div class="input-group-linkedin">
+                <label for="workTitle">Title *</label>
+                <input type="text" id="workTitle" placeholder="e.g., Completed Dashboard Feature" required>
+            </div>
 
-        <div class="input-group-linkedin">
-            <label for="uploadCert">Upload a Certificate (Optional)</label>
-            <input type="file" id="uploadCert" accept=".pdf,.jpg,.png">
-        </div>
+            <div class="input-group-linkedin">
+                <label for="workDescription">Description *</label>
+                <textarea id="workDescription" rows="5" placeholder="Describe what you accomplished..." required></textarea>
+            </div>
 
-        <div class="modal-actions-linkedin">
-            <button class="cancel-linkedin" onclick="closeLinkedInModal()">Cancel</button>
-            <button class="connect-linkedin-btn" onclick="connectLinkedIn()">Connect & Import</button>
-        </div>
+            <div class="modal-actions-linkedin">
+                <button type="button" class="cancel-linkedin" onclick="closeLinkedInModal()">Cancel</button>
+                <button type="submit" class="connect-linkedin-btn">Post to LinkedIn</button>
+            </div>
+        </form>
     </div>
 </div>
+<!-- LinkedIn Modal END -->
 
+<script src="{{ url_for('static', filename='js/linkedin.js') }}"></script>
 </body>
 </html>

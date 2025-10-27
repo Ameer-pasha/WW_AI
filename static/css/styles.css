@@ -1075,3 +1075,34 @@ body.dark-mode .cancel-linkedin {
 .connect-linkedin-btn:hover {
     background-color: #0056b3;
 }
+.input-group-linkedin {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group-linkedin label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.input-group-linkedin input,
+.input-group-linkedin textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1.5px solid #d1d1d1;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.25s ease;
+    background: #fafafa;
+}
+
+.input-group-linkedin input:focus,
+.input-group-linkedin textarea:focus {
+    border-color: #0a66c2;    /* LinkedIn Blue */
+    background: #fff;
+    box-shadow: 0 0 4px rgba(10, 102, 194, 0.4);
+}
