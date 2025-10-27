@@ -6,8 +6,15 @@
     <title>WorkWise AI - Team Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    {# Flask standard for linking static files: url_for('static', filename='...') #}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<!-- Chart.js library first -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Your custom JS that draws the chart -->
+    <script src="{{ url_for('static', filename='js/performanceChart.js') }}"></script>
+
+<!-- Theme toggle script -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="light-mode">
 
@@ -78,14 +85,11 @@
 
         <div class="content-box graph-section">
             <div class="graph-header">
-                <h3>Team Performance Trend</h3>
-                <p>Monthly comparison</p>
+                <h3>Team Performance Analysis</h3>
+                <p>Weekly comparison</p>
             </div>
-            <div class="chart-placeholder">
-                Line Graph Placeholder: Current Month (Green) vs Previous Month (Blue)
-                <div class="chart-legend">
-                    <span class="current">Current Month</span> • <span class="previous">Previous Month</span>
-                </div>
+            <div class="chart-container">
+                <canvas id="teamPerformanceChart"></canvas>
             </div>
         </div>
 
@@ -167,5 +171,8 @@
         }
     }
 </script>
+
+<script src="{{ url_for('static', filename='js/performanceChart.js') }}"></script>
+
 </body>
 </html>

@@ -8,72 +8,90 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="light-mode">
 
-    <aside class="sidebar">
-        <div class="logo-section">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
-            </svg>
-            <h1>WorkWise AI</h1>
-            <p>Manager Portal</p>
+<aside class="sidebar">
+    <div class="logo-section">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
+        </svg>
+        <h1>WorkWise AI</h1>
+        <p>
+            {% if user.role == "Manager" %}
+                Manager Portal
+            {% else %}
+                Employee Portal
+            {% endif %}
+        </p>
+    </div>
+
+<nav class="nav-links">
+    {% if user.role == "Manager" %}
+        <a href="{{ url_for('team_dashboard') }}">
+            <span class="material-icons">dashboard</span> Team Dashboard
+        </a>
+        <a href="{{ url_for('your_dashboard') }}" class="btn btn-primary">
+            <span class="material-icons">person</span> Your Dashboard
+        </a>
+        <a href="{{ url_for('leaderboard') }}">
+            <span class="material-icons">leaderboard</span> Leaderboard
+        </a>
+        <a href="{{ url_for('insights') }}" class="active">
+            <span class="material-icons">auto_fix_high</span> AI Insights
+        </a>
+    {% else %}
+        <a href="{{ url_for('your_dashboard') }}">
+            <span class="material-icons">person</span> Your Dashboard
+        </a>
+        <a href="{{ url_for('insights') }}" class="active">
+            <span class="material-icons">auto_fix_high</span> AI Insights
+        </a>
+    {% endif %}
+</nav>
+
+    <div class="utility-section">
+        <button id="mode-toggle" onclick="toggleDarkMode()">
+            <span class="material-icons">dark_mode</span> Dark Mode
+        </button>
+        <a href="{{ url_for('logout') }}" class="logout">
+            <span class="material-icons">logout</span> Logout
+        </a>
+    </div>
+</aside>
+
+<main class="main-content">
+
+    <header class="dashboard-header">
+        <h2>AI Insights</h2>
+        <p>Smart analytics and recommendations for better decisions</p>
+    </header>
+
+    <!-- Graph Section -->
+    <div class="content-box graph-section">
+        <div class="graph-header">
+            <h3>Team Performance Analysis</h3>
+            <p>Weekly comparison</p>
         </div>
-
-        <nav class="nav-links">
-            <a href="{{ url_for('team_dashboard') }}">
-                <span class="material-icons">dashboard</span> Team Dashboard
-            </a>
-            <a href="{{ url_for('your_dashboard') }}">
-                <span class="material-icons">person</span> Your Dashboard
-            </a>
-            <a href="{{ url_for('leaderboard') }}">
-                <span class="material-icons">leaderboard</span> Leaderboard
-            </a>
-            <a href="{{ url_for('insights') }}" class="active">
-                <span class="material-icons">auto_fix_high</span> AI Insights
-            </a>
-        </nav>
-
-        <div class="utility-section">
-            <button id="mode-toggle" onclick="toggleDarkMode()">
-                <span class="material-icons">dark_mode</span> Dark Mode
-            </button>
-            <a href="{{ url_for('logout') }}" class="logout">
-                <span class="material-icons">logout</span> Logout
-            </a>
+        <div class="chart-container">
+            <canvas id="teamPerformanceChart"></canvas>
         </div>
-    </aside>
+        <div class="chart-legend" style="display: none;">
+            <span class="current">Current Week</span> • <span class="previous">Previous Week</span>
+        </div>
+    </div>
 
-    <main class="main-content">
-
-        <header class="dashboard-header">
-            <h2>AI Insights</h2>
-            <p>Smart analytics and recommendations for better decisions</p>
-        </header>
-
-        <div class="content-box graph-section">
-            <div class="graph-header">
-                <h3>Team Performance Analysis</h3>
-                <p>Weekly comparison</p>
+    <!-- AI Summary Cards -->
+    <div class="ai-summary-cards">
+        <!-- Top Performers -->
+        <div class="card">
+            <div class="card-title">
+                <span class="material-icons card-icon green-icon">military_tech</span> Top Performers
             </div>
-            <div class="chart-placeholder">
-                Line Graph Placeholder: Current Week (Green) vs Previous Week (Blue)
-                <div class="chart-legend">
-                    <span class="current">Current Week</span> • <span class="previous">Previous Week</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="ai-summary-cards">
-
-            <!-- Top Performers -->
-            <div class="card">
-                <div class="card-title">
-                    <span class="material-icons card-icon green-icon">military_tech</span> Top Performers
-                </div>
-                <p class="card-subtitle" style="margin-top: 5px;">This week</p>
-                <ul class="performer-list">
+            <p class="card-subtitle" style="margin-top: 5px;">This week</p>
+            <ul class="performer-list">
+                {% if top_performers %}
                     {% for performer in top_performers %}
                     <li class="performer-item">
                         <div class="initials">{{ performer.name|first }}{{ performer.name.split()[1]|first if performer.name.split()|length > 1 else '' }}</div>
@@ -81,16 +99,20 @@
                         <span class="score-tag green-bg">{{ performer.performance_score }} pts</span>
                     </li>
                     {% endfor %}
-                </ul>
-            </div>
+                {% else %}
+                    <li class="no-data">No top performers data available</li>
+                {% endif %}
+            </ul>
+        </div>
 
-            <!-- Attention Needed -->
-            <div class="card">
-                <div class="card-title">
-                    <span class="material-icons card-icon red-icon">warning_amber</span> Attention Needed
-                </div>
-                <p class="card-subtitle" style="margin-top: 5px;">Needs support</p>
-                <ul class="performer-list">
+        <!-- Attention Needed -->
+        <div class="card">
+            <div class="card-title">
+                <span class="material-icons card-icon red-icon">warning_amber</span> Attention Needed
+            </div>
+            <p class="card-subtitle" style="margin-top: 5px;">Needs support</p>
+            <ul class="performer-list">
+                {% if attention_needed %}
                     {% for emp in attention_needed %}
                     <li class="performer-item">
                         <div class="initials red-initials">{{ emp.name|first }}{{ emp.name.split()[1]|first if emp.name.split()|length > 1 else '' }}</div>
@@ -98,67 +120,69 @@
                         <span class="score-tag yellow-bg">{{ emp.performance_score }} pts</span>
                     </li>
                     {% endfor %}
-                </ul>
-            </div>
-
-            <!-- Weekly Report -->
-            <div class="card report-card">
-                <div class="card-title" style="margin-bottom: 0;">
-                    <span class="material-icons card-icon blue-icon">description</span> Weekly Report
-                </div>
-                <div class="report-card-content">
-                    <h4 class="text-secondary">Comprehensive summary</h4>
-                    <div class="report-stat">
-                        <span>Team KPIs</span>
-                        <span class="report-stat-value green-text">+12%</span>
-                    </div>
-                    <div class="report-stat">
-                        <span>Goal Completion</span>
-                        <span class="report-stat-value blue-text">{{ goal_completion_rate }}%</span>
-                    </div>
-                    <div class="report-stat">
-                        <span>Avg Performance</span>
-                        <span class="report-stat-value">{{ avg_performance }}/100</span>
-                    </div>
-                    <button class="download-btn">
-                        <span class="material-icons icon-sm">download</span> Download PDF
-                    </button>
-                </div>
-            </div>
-
+                {% else %}
+                    <li class="no-data">No employees need attention</li>
+                {% endif %}
+            </ul>
         </div>
 
-        <h3 class="suggestions-title"><span class="material-icons icon-blue">psychology</span> AI Suggestions for You</h3>
-        <p class="text-secondary" style="margin-bottom: 25px;">Auto-generated insights based on current data and industry benchmarks</p>
-
-        <div class="suggestions-list">
-            {% for suggestion in ai_suggestions %}
-            <div class="suggestion-item {{ suggestion.type }}">
-                <span class="material-icons suggestion-icon
-                    {% if suggestion.type == 'alert' %}icon-orange
-                    {% elif suggestion.type == 'info' %}icon-blue
-                    {% elif suggestion.type == 'success' %}green-icon
-                    {% endif %}">
-                    {% if suggestion.type == 'alert' %}warning_amber
-                    {% elif suggestion.type == 'info' %}tune
-                    {% elif suggestion.type == 'success' %}trending_up
-                    {% endif %}
-                </span>
-                <div class="suggestion-text">
-                    <h5>{{ suggestion.title }}</h5>
-                    <p>{{ suggestion.text }}</p>
-                </div>
+        <!-- Weekly Report -->
+        <div class="card report-card">
+            <div class="card-title" style="margin-bottom: 0;">
+                <span class="material-icons card-icon blue-icon">description</span> Weekly Report
             </div>
-            {% endfor %}
+            <div class="report-card-content">
+                <h4 class="text-secondary">Comprehensive summary</h4>
+                <div class="report-stat">
+                    <span>Team KPIs</span>
+                    <span class="report-stat-value green-text">+12%</span>
+                </div>
+                <div class="report-stat">
+                    <span>Goal Completion</span>
+                    <span class="report-stat-value blue-text">{{ goal_completion_rate }}%</span>
+                </div>
+                <div class="report-stat">
+                    <span>Avg Performance</span>
+                    <span class="report-stat-value">{{ avg_performance }}/100</span>
+                </div>
+                <button class="download-btn">
+                    <span class="material-icons icon-sm">download</span> Download PDF
+                </button>
+            </div>
         </div>
-        
-    </main>
+    </div>
+
+    <!-- AI Suggestions -->
+    <h3 class="suggestions-title"><span class="material-icons icon-blue">psychology</span> AI Suggestions for You</h3>
+    <p class="text-secondary" style="margin-bottom: 25px;">Auto-generated insights based on current data and industry benchmarks</p>
+
+    <div class="suggestions-list">
+        {% for suggestion in ai_suggestions %}
+        <div class="suggestion-item {{ suggestion.type }}">
+            <span class="material-icons suggestion-icon
+                {% if suggestion.type == 'alert' %}icon-orange
+                {% elif suggestion.type == 'info' %}icon-blue
+                {% elif suggestion.type == 'success' %}green-icon
+                {% endif %}">
+                {% if suggestion.type == 'alert' %}warning_amber
+                {% elif suggestion.type == 'info' %}tune
+                {% elif suggestion.type == 'success' %}trending_up
+                {% endif %}
+            </span>
+            <div class="suggestion-text">
+                <h5>{{ suggestion.title }}</h5>
+                <p>{{ suggestion.text }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</main>
 
 <script>
     const body = document.body;
     const modeToggle = document.getElementById('mode-toggle');
 
-    // Load saved theme on page load
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
@@ -170,16 +194,12 @@
     function toggleDarkMode() {
         body.classList.toggle('dark-mode');
         const isDarkMode = body.classList.contains('dark-mode');
-
-        // Save preference to localStorage
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-
         updateToggleButton(isDarkMode);
     }
 
     function updateToggleButton(isDarkMode) {
         const iconSpan = modeToggle.querySelector('.material-icons');
-
         if (isDarkMode) {
             iconSpan.textContent = 'light_mode';
             modeToggle.childNodes[1].textContent = ' Light Mode';
@@ -189,5 +209,9 @@
         }
     }
 </script>
+
+<!-- CORRECTED: Load the team performance chart script -->
+<script src="{{ url_for('static', filename='js/performanceChart.js') }}"></script>
+
 </body>
 </html>

@@ -1,12 +1,16 @@
 import os
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import func
+from functools import wraps
+# from your_app_file import db, User
+# User.query.all()  # Should list 51 users (1 manager + 50 employees)
 
 
 
@@ -43,7 +47,7 @@ class User(db.Model):
     recognition_received = db.Column(db.Integer, default=0)
 
     employees = db.relationship('Employee', foreign_keys='Employee.manager_id', backref='manager', lazy=True)
-    employee_profile = db.relationship('Employee', foreign_keys='Employee.user_id', backref='user', uselist=False)
+    employee_profile = db.relationship('Employee', foreign_keys='Employee.user_id', backref='user', uselist=False) #ye wala line
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -100,6 +104,25 @@ class LeadershipActivity(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who receives
+    giver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who gives
+    comment = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', foreign_keys=[user_id], backref='received_feedbacks')
+    giver = db.relationship('User', foreign_keys=[giver_id], backref='given_feedbacks')
+
+    def to_dict(self, anonymous=False):
+        """Return feedback dict for template rendering"""
+        return {
+            "comment": self.comment,
+            "giver_name": "Anonymous Employee" if anonymous else self.giver.name,
+            "created_at": self.created_at.strftime("%d %b %Y, %H:%M")
+        }
+
 @app.template_filter()
 def format_number(value):
     try:
@@ -107,28 +130,80 @@ def format_number(value):
     except (ValueError, TypeError):
         return value
 
+def get_user_dashboard(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return None
+
+    # Goals
+    goals = Goal.query.filter_by(user_id=user.id).all()
+    total_goals = sum(goal.target for goal in goals)
+    completed_goals = sum(goal.completed for goal in goals)
+    completion = (completed_goals / total_goals) * 100 if total_goals else 0
+
+    # Feedback
+    feedback_count = Feedback.query.filter_by(user_id=user.id).count()
+
+    # Recognition / Bonus
+    bonus_count = Bonus.query.filter_by(user_id=user.id).count()
+    total_bonus = sum(b.amount for b in Bonus.query.filter_by(user_id=user.id).all())
+
+    # Leadership / Team Activity
+    leadership_activities = LeadershipActivity.query.filter_by(user_id=user.id).count()
+
+    dashboard_data = {
+        "user": user,
+        "completion": round(completion, 2),
+        "feedback_count": feedback_count,
+        "bonus_count": bonus_count,
+        "total_bonus": total_bonus,
+        "leadership_activities": leadership_activities
+    }
+
+    return dashboard_data
+
+
+
 # ==========================
 # DATABASE INIT & DUMMY DATA
 # ==========================
+
+
+
 def init_db():
-    # Delete old DB
+
+
+    """
+    Initialize database and create tables if they don't exist.
+    Only adds sample data if database is empty.
+    """
     db_path = os.path.join(BASE_DIR, "workwise.db")
-    if os.path.exists(db_path):
-        os.remove(db_path)
-        print("🗑️  Old database deleted.")
+    is_new_db = not os.path.exists(db_path)
 
-    # Create fresh tables
+    # Create tables if they don't exist (doesn't delete existing DB)
     db.create_all()
-    print("✅ Database tables created.")
 
-    # Manager
+    if is_new_db:
+        print("✅ New database created with tables.")
+    else:
+        print("ℹ️  Database already exists. Tables verified.")
+
+    # Check if database is empty (no users)
+    user_count = User.query.count()
+
+
+    print("📝 Database is empty. Adding sample data...")
+
+        # Manager
     manager = User(name="John Manager", email="manager@example.com", role="Manager",
-                   goals_assigned=5, goals_total=8, team_health_score=82,
-                   feedbacks_received=12, recognition_received=7)
+                       goals_assigned=5, goals_total=8, team_health_score=82,
+                       feedbacks_received=12, recognition_received=7)
+
     manager.set_password("Password123!")
     db.session.add(manager)
     db.session.commit()
     print("✅ Manager created.")
+
 
     # Employees (50 dummy)
     import random
@@ -150,9 +225,18 @@ def init_db():
                  "DevOps Engineer", "Product Manager", "Data Scientist"]
 
     for i in range(50):
+        user = User(
+            name=names[i],
+            email=f"employee{i + 1}@example.com",
+            role="Employee"
+        )
+        user.set_password("Password123!")
+        db.session.add(user)
+        db.session.commit()  # ✅ Commit here
+
         emp = Employee(
             name=names[i],
-            user_id=None,  # Not linked to a User account
+            user_id=user.id,
             position=random.choice(positions),
             department="Engineering",
             performance_score=random.randint(55, 100),
@@ -168,36 +252,7 @@ def init_db():
         ]
         db.session.add(emp)
 
-    db.session.commit()
-    print("✅ 50 Employees created.")
-
-    # Goals & Bonuses
-    current_month = datetime.now().strftime("%B-%Y")
-    if not Goal.query.filter_by(month=current_month).first():
-        goal = Goal(title="Q4 Goals", target=10, completed=6, month=current_month)
-        db.session.add(goal)
-        print("✅ Goal created.")
-
-    if not Bonus.query.filter_by(month=current_month).first():
-        first_employee = Employee.query.first()
-        if first_employee:
-            bonus = Bonus(amount=15000, month=current_month, employee_id=first_employee.id)
-            db.session.add(bonus)
-            print("✅ Bonus created.")
-
-    # Leadership Activities
-    activities = [
-        "Approved bonus for Aarav Sharma",
-        "Completed quarterly team review",
-        "Set new team goals for Q2",
-        "Recognized Priya Singh for design excellence"
-    ]
-    for act in activities:
-        db.session.add(LeadershipActivity(action=act, manager_id=manager.id))
-
-    db.session.commit()
-    print("✅ Leadership activities created.")
-    print("\n🎉 Database initialized successfully with all dummy data!")
+    db.session.commit()  # Commit all employees at the end
 
 
 # ==========================
@@ -210,43 +265,60 @@ def get_user_by_email(email):
 def get_user_by_id(user_id):
     return User.query.get(user_id)
 
-
 def login_required(view):
+    @wraps(view)
     def wrapped_view(*args, **kwargs):
         if "user_id" not in session:
             flash("Please log in first.", "danger")
             return redirect(url_for("login"))
         return view(*args, **kwargs)
-
-    wrapped_view.__name__ = view.__name__
     return wrapped_view
 
 
 # ==========================
 # ROUTES
 # ==========================
+
 @app.route("/")
 def index():
     return redirect(url_for("login"))
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get("email")
+        password = request.form.get("password")
+        role = request.form.get("role")  # Manager or Employee from hidden input
+
         user = get_user_by_email(email)
-        if not user or not user.check_password(password):
-            flash("Invalid credentials!", "danger")
+
+        if not user:
+            flash("No user found with this email.", "danger")
             return redirect(url_for("login"))
+
+        if not user.check_password(password):
+            flash("Incorrect password.", "danger")
+            return redirect(url_for("login"))
+
+        if user.role != role:
+            flash(f"Role mismatch. You are registered as {user.role}.", "danger")
+            return redirect(url_for("login"))
+
+        # Login successful
         session.clear()
         session["user_id"] = user.id
         session["role"] = user.role
+
         flash(f"Logged in as {user.role}", "success")
+
+        # Redirect based on role
         if user.role == "Manager":
             return redirect(url_for("team_dashboard"))
-        return redirect(url_for("your_dashboard"))
+        else:
+            return redirect(url_for("your_dashboard"))
+
     return render_template("login.html")
+
 
 
 @app.route("/logout")
@@ -255,10 +327,53 @@ def logout():
     flash("Logged out successfully.", "success")
     return redirect(url_for("login"))
 
+@app.route("/feedback", methods=["GET", "POST"])
+@login_required
+def give_feedback():
+    user = User.query.get(session["user_id"])
+    if request.method == "POST":
+        comment = request.form.get("comment").strip()
+        if comment:
+            feedback = Feedback(
+                user_id=user.manager_id,  # assuming Employee has manager_id field
+                giver_id=user.id,
+                comment=comment
+            )
+            db.session.add(feedback)
+            db.session.commit()
+            flash("Feedback submitted successfully!", "success")
+            return redirect(url_for("your_dashboard"))
+        else:
+            flash("Comment cannot be empty.", "warning")
+
+    return render_template("feedback_form.html", user=user)
+
+@app.route("/feedback-received")
+@login_required
+def feedback_received():
+    user = User.query.get(session["user_id"])
+    if user.role != "Manager":
+        flash("Access denied.", "danger")
+        return redirect(url_for("your_dashboard"))
+
+    feedbacks = Feedback.query.filter_by(user_id=user.id).order_by(Feedback.created_at.desc()).all()
+    feedback_list = [f.to_dict(anonymous=True) for f in feedbacks]
+
+    return render_template("feedback_received.html", user=user, feedback_list=feedback_list)
+
+@app.route("/feedback-given")
+@login_required
+def feedback_given():
+    user = User.query.get(session["user_id"])
+    feedbacks = Feedback.query.filter_by(giver_id=user.id).order_by(Feedback.created_at.desc()).all()
+    feedback_list = [f.to_dict() for f in feedbacks]
+
+    return render_template("feedback_given.html", user=user, feedback_list=feedback_list)
 
 # ==========================
 # DASHBOARDS
 # ==========================
+
 @app.route("/your-dashboard")
 @login_required
 def your_dashboard():
@@ -419,7 +534,7 @@ def your_dashboard():
             summary_cards=summary_cards,
             ai_reflection=ai_reflection,
             recent_activities=recent_activities,
-            is_employee=True
+            is_employee=False
         )
 
 
@@ -536,91 +651,93 @@ def employee_detail(employee_id):
 def insights():
     user = get_user_by_id(session["user_id"])
 
-    # Only managers can access insights
-    if user.role != "Manager":
-        flash("Access denied. Only managers can access AI Insights.", "danger")
-        return redirect(url_for("your_dashboard"))
-
-    team_members = Employee.query.filter_by(manager_id=user.id).all()
-
-    # Top Performers (top 5)
-    top_performers = sorted(team_members, key=lambda e: e.performance_score, reverse=True)[:5]
-
-    # Attention Needed (bottom 5)
-    attention_needed = sorted(team_members, key=lambda e: e.performance_score)[:5]
-
-    # Calculate metrics
-    avg_performance = sum([e.performance_score for e in team_members]) / len(team_members) if team_members else 0
-
-    # Goal completion rate
-    current_month = datetime.now().strftime("%B-%Y")
-    current_goal = Goal.query.filter_by(month=current_month).first()
-    goal_completion_rate = int(
-        (current_goal.completed / current_goal.target * 100)) if current_goal and current_goal.target > 0 else 0
-
-    # AI Suggestions based on data analysis
     ai_suggestions = []
 
-    # Suggestion 1: Low performers
-    if len([e for e in team_members if e.performance_score < 70]) > 0:
+    if user.role == "Manager":
+        # Manager-specific insights
+        team_members = Employee.query.filter_by(manager_id=user.id).all()
+
+        top_performers = sorted(team_members, key=lambda e: e.performance_score, reverse=True)[:5]
+        attention_needed = sorted(team_members, key=lambda e: e.performance_score)[:5]
+        avg_performance = sum([e.performance_score for e in team_members]) / len(team_members) if team_members else 0
+
+        current_month = datetime.now().strftime("%B-%Y")
+        current_goal = Goal.query.filter_by(month=current_month).first()
+        goal_completion_rate = int((current_goal.completed / current_goal.target * 100)) if current_goal and current_goal.target > 0 else 0
+
+        # AI Suggestions for Manager
         low_count = len([e for e in team_members if e.performance_score < 70])
-        ai_suggestions.append({
-            "type": "alert",
-            "title": "Performance Alert",
-            "text": f"{low_count} team member{'s' if low_count > 1 else ''} below 70% performance. Schedule 1-on-1 meetings to provide support and set improvement goals."
-        })
+        if low_count > 0:
+            ai_suggestions.append({
+                "type": "alert",
+                "title": "Performance Alert",
+                "text": f"{low_count} team member{'s' if low_count > 1 else ''} below 70% performance. Schedule 1-on-1 meetings to provide support."
+            })
 
-    # Suggestion 2: High performers recognition
-    high_performers_count = len([e for e in team_members if e.performance_score >= 90])
-    if high_performers_count > 0:
-        ai_suggestions.append({
-            "type": "success",
-            "title": "Recognition Opportunity",
-            "text": f"You have {high_performers_count} top performer{'s' if high_performers_count > 1 else ''} (90+). Consider public recognition or bonus rewards to maintain motivation."
-        })
+        high_count = len([e for e in team_members if e.performance_score >= 90])
+        if high_count > 0:
+            ai_suggestions.append({
+                "type": "success",
+                "title": "Recognition Opportunity",
+                "text": f"{high_count} top performer{'s' if high_count > 1 else ''} (90+). Consider rewards to maintain motivation."
+            })
 
-    # Suggestion 3: Goal completion
-    if goal_completion_rate < 50:
-        ai_suggestions.append({
-            "type": "alert",
-            "title": "Goal Progress Behind Schedule",
-            "text": f"Only {goal_completion_rate}% of goals completed. Review blockers with team and adjust timelines if needed."
-        })
-    elif goal_completion_rate > 80:
-        ai_suggestions.append({
-            "type": "success",
-            "title": "Excellent Goal Progress",
-            "text": f"Team is at {goal_completion_rate}% goal completion. Consider setting stretch goals for high performers."
-        })
+        if goal_completion_rate < 50:
+            ai_suggestions.append({
+                "type": "alert",
+                "title": "Goal Progress Behind Schedule",
+                "text": f"Only {goal_completion_rate}% of goals completed. Review blockers and adjust timelines if needed."
+            })
+        elif goal_completion_rate > 80:
+            ai_suggestions.append({
+                "type": "success",
+                "title": "Excellent Goal Progress",
+                "text": f"Team is at {goal_completion_rate}% goal completion. Consider stretch goals for high performers."
+            })
 
-    # Suggestion 4: Work-life balance
-    avg_work_hours = sum([int(e.work_logs.split()[0]) for e in team_members if e.work_logs]) / len(
-        [e for e in team_members if e.work_logs]) if any(e.work_logs for e in team_members) else 40
-    if avg_work_hours > 45:
-        ai_suggestions.append({
-            "type": "info",
-            "title": "Work-Life Balance Check",
-            "text": f"Team averaging {avg_work_hours:.0f} hrs/week. Monitor for burnout and ensure adequate rest periods."
-        })
+        return render_template(
+            "insights.html",
+            user=user,
+            top_performers=top_performers,
+            attention_needed=attention_needed,
+            avg_performance=f"{avg_performance:.1f}",
+            goal_completion_rate=goal_completion_rate,
+            ai_suggestions=ai_suggestions
+        )
 
-    # Suggestion 5: Code quality
-    avg_commits = sum([e.commits or 0 for e in team_members]) / len(team_members) if team_members else 0
-    if avg_commits < 60:
-        ai_suggestions.append({
-            "type": "info",
-            "title": "Development Activity Low",
-            "text": f"Average commits at {avg_commits:.0f}/month. Investigate if there are blockers affecting productivity."
-        })
+    else:
+        # Employee-specific insights
+        employee = Employee.query.filter_by(user_id=user.id).first()
+        personal_score = employee.performance_score if employee else 0
+        goal_completion_rate = employee.goal_completion_rate if hasattr(employee, "goal_completion_rate") else 0
 
-    return render_template(
-        "insights.html",
-        user=user,
-        top_performers=top_performers,
-        attention_needed=attention_needed,
-        avg_performance=f"{avg_performance:.1f}",
-        goal_completion_rate=goal_completion_rate,
-        ai_suggestions=ai_suggestions
-    )
+        # For template consistency, pass single-item lists for top_performers and attention_needed
+        top_performers = [employee] if employee else []
+        attention_needed = []
+
+        # AI Suggestions for Employee
+        if personal_score < 70:
+            ai_suggestions.append({
+                "type": "alert",
+                "title": "Performance Alert",
+                "text": f"Your performance is below 70%. Focus on improving your goals."
+            })
+        elif personal_score >= 90:
+            ai_suggestions.append({
+                "type": "success",
+                "title": "Great Job!",
+                "text": f"Your performance is excellent. Keep up the good work!"
+            })
+
+        return render_template(
+            "insights.html",
+            user=user,
+            top_performers=top_performers,
+            attention_needed=attention_needed,
+            avg_performance=f"{personal_score:.1f}",
+            goal_completion_rate=goal_completion_rate,
+            ai_suggestions=ai_suggestions
+        )
 
 
 @app.route("/leaderboard")
@@ -692,6 +809,229 @@ def leaderboard():
         sort_options=sort_options,
         ai_tip=ai_tip
     )
+
+
+@app.route('/performance_data')
+@login_required
+def performance_data():
+    try:
+        user = User.query.get(session['user_id'])
+        print(f"User: {user.name}, Role: {user.role}")
+
+        if user.role == 'Manager':
+            # Manager sees all team members
+            team_members = Employee.query.filter_by(manager_id=user.id).all()
+
+            data = {
+                "labels": [e.name for e in team_members],
+                "current_week": [e.performance_score for e in team_members],
+                "previous_week": [max(e.performance_score - 5, 0) for e in team_members]
+            }
+        else:
+            # Employee sees only their own data
+            employee = Employee.query.filter_by(user_id=user.id).first()
+
+            if not employee:
+                return jsonify({"error": "Employee profile not found"}), 404
+
+            # Show employee's performance over last 4 weeks (simulated)
+            import random
+            current_score = employee.performance_score
+
+            data = {
+                "labels": ["Week 1", "Week 2", "Week 3", "Week 4 (Current)"],
+                "current_week": [
+                    max(current_score - random.randint(10, 20), 50),
+                    max(current_score - random.randint(5, 15), 55),
+                    max(current_score - random.randint(0, 10), 60),
+                    current_score
+                ],
+                "previous_week": []  # Not needed for employee view
+            }
+
+        print("Performance data:", data)
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Error in performance_data: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/personal_performance_data')
+@login_required
+def personal_performance_data():
+    try:
+        user = User.query.get(session['user_id'])
+        print(f"Personal data - User: {user.name}, Role: {user.role}")
+
+        if user.role == 'Manager':
+            # Manager's personal goals
+            data = {
+                "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+                "planned": [10, 15, 20, 25],
+                "actual": [8, 14, 18, 23]
+            }
+        else:
+            # Employee's personal goals
+            employee = Employee.query.filter_by(user_id=user.id).first()
+
+            if not employee:
+                return jsonify({"error": "Employee profile not found"}), 404
+
+            import random
+            planned_base = [10, 15, 20, 25]
+            actual_goals = []
+
+            for planned in planned_base:
+                actual = planned - random.randint(0, 3)
+                actual_goals.append(max(actual, 0))
+
+            data = {
+                "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+                "planned": planned_base,
+                "actual": actual_goals
+            }
+
+        print("Personal performance data:", data)
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Error in personal_performance_data: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/employee_performance_data/<int:employee_id>')
+@login_required
+def employee_performance_data(employee_id):
+    """
+    Returns performance data for a specific employee
+    Current month vs Previous month comparison
+    """
+    try:
+        user = User.query.get(session['user_id'])
+        print(f"Fetching performance data for employee {employee_id} by user: {user.name}")
+
+        # Verify user has permission (must be a manager)
+        if user.role != 'Manager':
+            return jsonify({"error": "Unauthorized access"}), 403
+
+        # Get the employee
+        employee = Employee.query.get(employee_id)
+
+        if not employee:
+            return jsonify({"error": "Employee not found"}), 404
+
+        # Verify this employee belongs to this manager
+        if employee.manager_id != user.id:
+            return jsonify({"error": "Unauthorized access to this employee"}), 403
+
+        import random
+
+        # Generate weekly data for current and previous month
+        # Week 1, Week 2, Week 3, Week 4
+        current_score = employee.performance_score
+
+        # Current month: trending upward to current score
+        current_month_data = [
+            max(current_score - random.randint(15, 25), 50),
+            max(current_score - random.randint(10, 20), 55),
+            max(current_score - random.randint(5, 15), 60),
+            current_score
+        ]
+
+        # Previous month: slightly lower average
+        previous_avg = max(current_score - 10, 50)
+        previous_month_data = [
+            max(previous_avg - random.randint(5, 15), 45),
+            max(previous_avg - random.randint(0, 10), 50),
+            max(previous_avg + random.randint(0, 5), 50),
+            max(previous_avg + random.randint(0, 8), 50)
+        ]
+
+        data = {
+            "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+            "current_month": current_month_data,
+            "previous_month": previous_month_data,
+            "employee_name": employee.name
+        }
+
+        print("Employee performance data:", data)
+        return jsonify(data)
+
+    except Exception as e:
+        print(f"Error in employee_performance_data: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+# IN FUTURE FOR DYNAMIC VALUES:
+# class GoalTracking(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+#     week = db.Column(db.String(20))  # "Week 1", "Week 2", etc.
+#     planned_goals = db.Column(db.Integer)
+#     actual_goals = db.Column(db.Integer)
+#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+#@app.route('/personal_performance_data')
+# @login_required
+# def personal_performance_data():
+#     user_id = session['user_id']
+#
+#     # Get real data from database
+#     goal_records = GoalTracking.query.filter_by(user_id=user_id)\
+#         .order_by(GoalTracking.created_at.desc())\
+#         .limit(4).all()
+#
+#     labels = [g.week for g in goal_records]
+#     planned = [g.planned_goals for g in goal_records]
+#     actual = [g.actual_goals for g in goal_records]
+#
+#     return jsonify({
+#         "labels": labels,
+#         "planned": planned,
+#         "actual": actual
+#     })
+# <form action="/update_goals" method="POST">
+#     <input type="number" name="planned" placeholder="Planned goals">
+#     <input type="number" name="actual" placeholder="Actual goals">
+#     <button type="submit">Update</button>
+# </form>
+# @app.route('/update_goals', methods=['POST'])
+# @login_required
+# def update_goals():
+#     new_goal = GoalTracking(
+#         user_id=session['user_id'],
+#         week=f"Week {week_number}",
+#         planned_goals=request.form.get('planned'),
+#         actual_goals=request.form.get('actual')
+#     )
+#     db.session.add(new_goal)
+#     db.session.commit()
+#     return redirect(url_for('your_dashboard'))
+# <select id="timeRange" onchange="updateChart()">
+#     <option value="week">Last Week</option>
+#     <option value="month">Last Month</option>
+#     <option value="quarter">Last Quarter</option>
+# </select>
+# function updateChart() {
+#     const range = document.getElementById('timeRange').value;
+#     fetch(`/personal_performance_data?range=${range}`)
+#         .then(response => response.json())
+#         .then(data => {
+#             myChart.data.labels = data.labels;
+#             myChart.data.datasets[0].data = data.actual;
+#             myChart.update();
+#         });
+# }
+# 6. API Integration
+# @app.route('/performance_data')
+# def performance_data():
+#     # Fetch from external API
+#     response = requests.get('https://api.example.com/goals')
+#     external_data = response.json()
+#
+#     # Transform and return
+#     return jsonify(external_data)
+
 
 
 # ==========================

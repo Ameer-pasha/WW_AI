@@ -7,29 +7,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* Minimal modal styling */
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-.modal-content { background:#fff; padding:20px; border-radius:8px; width:300px; position:relative; }
-.close-btn { position:absolute; top:10px; right:10px; cursor:pointer; font-size:20px; }
-.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
-.cancel { background:#ccc; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
-.confirm-reward-btn { background:#007BFF; color:#fff; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; }
-.content-box { background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px; }
-.graph-header { margin-bottom:10px; }
-.chart-placeholder { padding:20px; background:#e0e0e0; border-radius:8px; text-align:center; }
-.skill-list { list-style:none; padding:0; margin:0; }
-.skill-item { margin-bottom:10px; }
-.progress-bar-container { background:#ddd; height:10px; border-radius:5px; }
-.progress-bar { height:10px; background:#007BFF; border-radius:5px; }
-.activity-item { display:flex; align-items:flex-start; margin-bottom:10px; }
-.dot { width:10px; height:10px; border-radius:50%; margin-right:10px; margin-top:6px; }
-.green-dot { background:green; }
-.blue-dot { background:blue; }
-.metric-card { background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; display:inline-block; width:30%; margin-right:1.5%; }
-.metric-card-title { font-weight:600; margin-bottom:5px; }
-.metric-card-value { font-size:1.5em; font-weight:700; }
+/* Modal styling */
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index: 1000; }
+.modal-content { background:#fff; padding:30px; border-radius:12px; width:400px; max-width: 90%; position:relative; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+.close-btn { position:absolute; top:15px; right:15px; cursor:pointer; font-size:24px; color: #999; transition: color 0.2s; }
+.close-btn:hover { color: #333; }
+.modal-content h3 { margin-bottom: 15px; font-size: 1.4em; }
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
+.input-group input, .input-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.95em; }
+.input-group textarea { resize: vertical; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.cancel { background:#e9ecef; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight: 600; transition: background 0.2s; }
+.cancel:hover { background: #d3d6d9; }
+.confirm-reward-btn { background:#007BFF; color:#fff; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; font-weight: 600; transition: background 0.2s; }
+.confirm-reward-btn:hover { background: #0056b3; }
+
+/* Chart container styling */
+.chart-placeholder { padding:0; background:transparent; border-radius:8px; min-height: 300px; }
+
+/* Metric cards */
+.employee-metrics { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
+.metric-card { background:#fff; padding:20px; border-radius:10px; flex: 1; min-width: 200px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
+.metric-card-title { font-weight:600; margin-bottom:8px; color: #666; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-card-value { font-size:2em; font-weight:700; margin-bottom: 5px; }
 .metric-card-change { font-size:0.9em; }
+
+/* Skill list improvements */
+.skill-list { list-style:none; padding:0; margin:0; }
+.skill-item { margin-bottom:15px; }
+.skill-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: 600; }
+.progress-bar-container { background:#e9ecef; height:12px; border-radius:6px; overflow: hidden; }
+.progress-bar { height:12px; background: linear-gradient(90deg, #007BFF, #0056b3); border-radius:6px; transition: width 0.3s ease; }
+
+/* Activity improvements */
+.activity-item { display:flex; align-items:flex-start; margin-bottom:15px; padding: 10px; border-radius: 6px; transition: background 0.2s; }
+.activity-item:hover { background: #f8f9fa; }
+.dot { width:12px; height:12px; border-radius:50%; margin-right:12px; margin-top:6px; flex-shrink: 0; }
+.green-dot { background:#28a745; }
+.blue-dot { background:#007BFF; }
+.activity-item .text h5 { margin: 0 0 5px 0; font-size: 0.95em; }
+.activity-item .text p { margin: 0; font-size: 0.85em; }
 </style>
 </head>
 <body class="light-mode">
@@ -51,7 +71,9 @@
     </nav>
 
     <div class="utility-section">
-        <button id="mode-toggle"><span class="material-icons">dark_mode</span> Dark Mode</button>
+        <button id="mode-toggle" onclick="toggleDarkMode()">
+            <span class="material-icons">dark_mode</span> Dark Mode
+        </button>
         <a href="{{ url_for('logout') }}" class="logout"><span class="material-icons">logout</span> Logout</a>
     </div>
 </aside>
@@ -70,7 +92,7 @@
         </div>
         <div class="profile-actions">
             <button class="action-button feedback"><span class="material-icons">chat_bubble_outline</span> Feedback</button>
-            <button class="reward-btn" onclick="openRewardModal('{{ employee.name }}')">Reward</button>
+            <button class="reward-btn" onclick="openRewardModal('{{ employee.name }}', {{ employee.id }})">Reward</button>
         </div>
     </div>
 
@@ -100,8 +122,7 @@
             <p class="text-secondary">Monthly comparison</p>
         </div>
         <div class="chart-placeholder">
-            Line Graph Placeholder: Current Month (Green) vs Previous Month (Blue)
-            <div class="chart-legend"><span class="current">Current Month</span> • <span class="previous">Previous Month</span></div>
+            <!-- Chart will be rendered here by JavaScript -->
         </div>
     </div>
 
@@ -150,7 +171,7 @@
         <p>Give a bonus to <strong id="reward-employee-name"></strong></p>
         <div class="input-group">
             <label for="bonusAmount">Bonus Amount (₹)</label>
-            <input type="number" id="bonusAmount" value="5000" min="100" required>
+            <input type="number" id="bonusAmount" value="5000" min="100" step="100" required>
         </div>
         <div class="input-group">
             <label for="bonusNote">Note (Optional)</label>
@@ -164,23 +185,73 @@
 </div>
 
 <script>
+// Dark mode toggle
+const body = document.body;
+const modeToggle = document.getElementById('mode-toggle');
+
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        updateToggleButton(true);
+    }
+});
+
+function toggleDarkMode() {
+    body.classList.toggle('dark-mode');
+    const isDarkMode = body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    updateToggleButton(isDarkMode);
+}
+
+function updateToggleButton(isDarkMode) {
+    const iconSpan = modeToggle.querySelector('.material-icons');
+    if (isDarkMode) {
+        iconSpan.textContent = 'light_mode';
+        modeToggle.childNodes[1].textContent = ' Light Mode';
+    } else {
+        iconSpan.textContent = 'dark_mode';
+        modeToggle.childNodes[1].textContent = ' Dark Mode';
+    }
+}
+
+// Reward modal
 const rewardModal = document.getElementById('rewardModal');
 const rewardEmployeeName = document.getElementById('reward-employee-name');
+let currentEmployeeId = null;
 
-function openRewardModal(employeeName) {
+function openRewardModal(employeeName, employeeId) {
     rewardEmployeeName.textContent = employeeName;
+    currentEmployeeId = employeeId;
     rewardModal.style.display = 'flex';
 }
 
 function closeRewardModal() {
     rewardModal.style.display = 'none';
+    currentEmployeeId = null;
 }
 
 function confirmReward() {
     const name = rewardEmployeeName.textContent;
     const amount = document.getElementById('bonusAmount').value;
     const note = document.getElementById('bonusNote').value;
-    console.log('Reward confirmed:', { name, amount, note });
+
+    if (!amount || amount < 100) {
+        alert('Please enter a valid bonus amount (minimum ₹100)');
+        return;
+    }
+
+    // TODO: Send reward data to backend
+    console.log('Reward confirmed:', {
+        employeeId: currentEmployeeId,
+        name,
+        amount,
+        note
+    });
+
+    // You can add an AJAX call here to save the reward to the database
+    // fetch('/give_reward', { method: 'POST', ... })
+
     alert(`Reward of ₹${amount} given to ${name}!`);
     closeRewardModal();
 }
@@ -189,6 +260,9 @@ window.onclick = function(event) {
     if (event.target === rewardModal) closeRewardModal();
 }
 </script>
+
+<!-- Load the employee performance chart script -->
+<script src="{{ url_for('static', filename='js/employeePerformanceChart.js') }}"></script>
 
 </body>
 </html>

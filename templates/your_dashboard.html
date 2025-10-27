@@ -6,22 +6,30 @@
     <title>WorkWise AI - Your Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-    {# Flask standard for linking static files: url_for('static', filename='...') #}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="light-mode">
 
-    <aside class="sidebar">
-        <div class="logo-section">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
-            </svg>
-            <h1>WorkWise AI</h1>
-            <p>Manager Portal</p>
-        </div>
 
-        <nav class="nav-links">
+<aside class="sidebar">
+    <div class="logo-section">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
+        </svg>
+        <h1>WorkWise AI</h1>
+        <p>
+            {% if user.role == "Manager" %}
+                Manager Portal
+            {% else %}
+                Employee Portal
+            {% endif %}
+        </p>
+    </div>
+
+    <nav class="nav-links">
+        {% if user.role == "Manager" %}
             <a href="{{ url_for('team_dashboard') }}">
                 <span class="material-icons">dashboard</span> Team Dashboard
             </a>
@@ -34,69 +42,65 @@
             <a href="{{ url_for('insights') }}">
                 <span class="material-icons">auto_fix_high</span> AI Insights
             </a>
-        </nav>
-
-        <div class="utility-section">
-            <button id="mode-toggle" onclick="toggleDarkMode()">
-                <span class="material-icons">dark_mode</span> Dark Mode
-            </button>
-            <a href="{{ url_for('logout') }}" class="logout">
-                <span class="material-icons">logout</span> Logout
+        {% else %}
+            <a href="{{ url_for('your_dashboard') }}" class="active">
+                <span class="material-icons">person</span> Your Dashboard
             </a>
-        </div>
-    </aside>
+            <a href="{{ url_for('insights') }}">
+                <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
+        {% endif %}
+    </nav>
 
+    <div class="utility-section">
+        <button id="mode-toggle" onclick="toggleDarkMode()">
+            <span class="material-icons">dark_mode</span> Dark Mode
+        </button>
+        <a href="{{ url_for('logout') }}" class="logout">
+            <span class="material-icons">logout</span> Logout
+        </a>
+    </div>
+</aside>
     <main class="main-content">
-
         <header class="dashboard-header">
-            {# Dynamic user name #}
             <h2>Welcome Back, {{ user.name }}</h2>
-            <p>Here’s your performance snapshot.</p>
+            <p>Here's your performance snapshot.</p>
         </header>
-
-        <div class="summary-cards">
-
-            {# Loop through the summary_cards data #}
-            {% for card in summary_cards %}
-            <div class="card {{ card.css_class }}">
-                <div class="card-title">
-                    <span class="material-icons card-icon {% if card.icon_class %}{{ card.icon_class }}{% endif %}">{{ card.icon }}</span> {{ card.title }}
-                </div>
-                <div class="card-main-value">{{ card.main_value }}</div>
-
-                {% if card.progress_percent %}
-                {# Conditional progress bar for Goals Assigned #}
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: {{ card.progress_percent }}%;"></div>
-                </div>
-                {% endif %}
-
-                <p class="card-subtitle {% if card.subtitle_class %}{{ card.subtitle_class }}{% endif %}">{{ card.subtitle }}</p>
+    <div class="summary-cards">
+        {% for card in summary_cards %}
+        <div class="card {{ card.css_class }}">
+            <div class="card-title">
+                <span class="material-icons card-icon {% if card.icon_class %}{{ card.icon_class }}{% endif %}">{{ card.icon }}</span> {{ card.title }}
             </div>
-            {% endfor %}
+            <div class="card-main-value">{{ card.main_value }}</div>
 
-        </div>
-
-        <div class="content-box graph-section">
-            <div class="graph-header">
-                <h3>Personal Performance</h3>
-                <p>Planned vs Actual goals completion</p>
+            {% if card.progress_percent %}
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: {{ card.progress_percent }}%;"></div>
             </div>
-            <div class="chart-placeholder">
-                Line Graph Placeholder: Actual Goals (Green) vs Planned Goals (Blue)
-                <div class="chart-legend">
-                    <span class="current green-text">Actual Goals</span> • <span class="previous blue-text">Planned Goals</span>
-                </div>
-            </div>
-        </div>
+            {% endif %}
 
-        <div class="ai-reflection-box">
-            <h4><span class="material-icons icon-blue">auto_fix_high</span> AI Reflection</h4>
-            {# Dynamic AI Reflection #}
-            <p>{{ ai_reflection }}</p>
+            <p class="card-subtitle {% if card.subtitle_class %}{{ card.subtitle_class }}{% endif %}">{{ card.subtitle }}</p>
         </div>
+        {% endfor %}
+    </div>
 
-        
+    <div class="content-box graph-section">
+        <div class="graph-header">
+            <h3>Personal Performance</h3>
+            <p>Planned vs Actual goals completion</p>
+        </div>
+        <div class="chart-container">
+            <canvas id="personalGoalsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="ai-reflection-box">
+        <h4><span class="material-icons icon-blue">auto_fix_high</span> AI Reflection</h4>
+        <p>{{ ai_reflection }}</p>
+    </div>
+
+
     </main>
 
 <script>
@@ -134,5 +138,8 @@
         }
     }
 </script>
+
+<script src="{{ url_for('static', filename='js/personal-goals-chart.js') }}"></script>
+
 </body>
 </html>
