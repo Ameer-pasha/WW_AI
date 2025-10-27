@@ -42,12 +42,18 @@
             <a href="{{ url_for('insights') }}">
                 <span class="material-icons">auto_fix_high</span> AI Insights
             </a>
+            <a href="#" onclick="openLinkedInModal(event)">
+                <span class="material-icons">share</span> LinkedIn Connect
+            </a>
         {% else %}
             <a href="{{ url_for('your_dashboard') }}" class="active">
                 <span class="material-icons">person</span> Your Dashboard
             </a>
             <a href="{{ url_for('insights') }}">
                 <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
+            <a href="#" onclick="openLinkedInModal(event)">
+                <span class="material-icons">share</span> LinkedIn Connect
             </a>
         {% endif %}
     </nav>
@@ -142,7 +148,35 @@
 }
 </script>
 
-<script src="{{ url_for('static', filename='js/personal-goals-chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/personal-goals-chart.js') }}">
+    
+</script>
+
+<div id="linkedinModal" class="modal-linkedin">
+    <div class="modal-content-linkedin">
+        <span class="close-btn-linkedin" onclick="closeLinkedInModal()">&times;</span>
+        
+        <h3>Connect Your LinkedIn Profile</h3>
+        <p class="modal-description">
+            Connect your profile to import certifications, course completions, and performance reviews to enhance your WorkWise AI profile and insights.
+        </p>
+
+        <div class="input-group-linkedin">
+            <label for="linkedinURL">LinkedIn Profile URL</label>
+            <input type="url" id="linkedinURL" placeholder="https://www.linkedin.com/in/username" required>
+        </div>
+
+        <div class="input-group-linkedin">
+            <label for="uploadCert">Upload a Certificate (Optional)</label>
+            <input type="file" id="uploadCert" accept=".pdf,.jpg,.png">
+        </div>
+
+        <div class="modal-actions-linkedin">
+            <button class="cancel-linkedin" onclick="closeLinkedInModal()">Cancel</button>
+            <button class="connect-linkedin-btn" onclick="connectLinkedIn()">Connect & Import</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
