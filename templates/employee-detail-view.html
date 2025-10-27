@@ -64,10 +64,14 @@
     </div>
 
     <nav class="nav-links">
-        <a href="{{ url_for('team_dashboard') }}"><span class="material-icons">dashboard</span> Team Dashboard</a>
-        <a href="{{ url_for('your_dashboard') }}"><span class="material-icons">person</span> Your Dashboard</a>
-        <a href="{{ url_for('leaderboard') }}"><span class="material-icons">leaderboard</span> Leaderboard</a>
-        <a href="{{ url_for('insights') }}"><span class="material-icons">auto_fix_high</span> AI Insights</a>
+            <a href="{{ url_for('team_dashboard') }}"><span class="material-icons">dashboard</span> Team Dashboard</a>
+            <a href="{{ url_for('your_dashboard') }}"><span class="material-icons">person</span> Your Dashboard</a>
+            <a href="{{ url_for('goals_management') }}" class="active"><span class="material-icons">flag</span> Goals</a>
+            <a href="{{ url_for('leaderboard') }}"><span class="material-icons">leaderboard</span> Leaderboard</a>
+            <a href="{{ url_for('insights') }}"><span class="material-icons">auto_fix_high</span> AI Insights</a>
+                    <a href="#" onclick="openLinkedInModal(event)">
+            <span class="material-icons">share</span> LinkedIn Connect
+        </a>
     </nav>
 
     <div class="utility-section">

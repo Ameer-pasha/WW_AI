@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/goals-styles.css') }}">
-    
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 
@@ -29,6 +28,9 @@
             <a href="{{ url_for('goals_management') }}" class="active"><span class="material-icons">flag</span> Goals</a>
             <a href="{{ url_for('leaderboard') }}"><span class="material-icons">leaderboard</span> Leaderboard</a>
             <a href="{{ url_for('insights') }}"><span class="material-icons">auto_fix_high</span> AI Insights</a>
+            <a href="#" onclick="openLinkedInModal(event)">
+                <span class="material-icons">share</span> LinkedIn Connect
+            </a>
         </nav>
 
         <div class="utility-section">
@@ -54,7 +56,7 @@
                     <span class="material-icons">add_task</span> Assign Goal
                 </button>
             </div>
-            
+
             <p class="text-secondary">Use the button above to assign a new goal to a team member.</p>
         </div>
 
@@ -75,12 +77,14 @@
                         {% for goal in assigned_goals %}
                         <tr>
                             <td>{{ goal.title }}</td>
-                            <td>{{ goal.employee_name }}</td>
-                            <td>{{ goal.due_date }}</td>
+                            <td>{{ goal.employee.name }}</td>
+                            <td>{{ goal.due_date.strftime('%Y-%m-%d') if goal.due_date else 'N/A' }}</td>
                             <td>
-                                <span class="status-badge status-{{ goal.status_class }}">{{ goal.status }}</span>
+                                <span class="status-badge">{{ goal.status }}</span>
                             </td>
-                            <td><button onclick="markGoalComplete({{ goal.id }})" class="action-button feedback">Complete</button></td>
+                            <td>
+                                <button onclick="markGoalComplete({{ goal.id }})" class="action-button feedback">Complete</button>
+                            </td>
                         </tr>
                         {% endfor %}
                         {% if not assigned_goals %}
@@ -92,7 +96,7 @@
                 </table>
             </div>
         </div>
-        
+
         <div class="content-box">
             <h3>Recent Completed Goals</h3>
             <div class="goal-table-container">
@@ -105,11 +109,11 @@
                         </tr>
                     </thead>
                     <tbody id="completedGoalsBody">
-                         {% for goal in completed_goals %}
+                        {% for goal in completed_goals %}
                         <tr>
                             <td>{{ goal.title }}</td>
-                            <td>{{ goal.employee_name }}</td>
-                            <td>{{ goal.completion_date }}</td>
+                            <td>{{ goal.employee.name }}</td>
+                            <td>{{ goal.completion_date.strftime('%Y-%m-%d') if goal.completion_date else 'N/A' }}</td>
                         </tr>
                         {% endfor %}
                         {% if not completed_goals %}
@@ -121,26 +125,27 @@
                 </table>
             </div>
         </div>
-        
+
     </main>
 
-    <div id="goalModal" class="modal">
+    <!-- Goal Assignment Modal -->
+    <div id="goalModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-btn" onclick="closeGoalModal()">&times;</span>
-            
+
             <h3>Assign a New Goal</h3>
             <form id="assignGoalForm" onsubmit="submitGoalAssignment(event)">
                 <div class="input-group">
                     <label for="goalTitle">Goal/Task Description</label>
                     <input type="text" id="goalTitle" name="goalTitle" placeholder="e.g., Complete Flask API for user auth" required>
                 </div>
-                
+
                 <div class="input-group">
                     <label for="employeeSelect">Assign Employee</label>
                     <select id="employeeSelect" name="employeeId" required>
                         <option value="">-- Select Team Member --</option>
                         {% for employee in all_employees %}
-                        <option value="{{ employee.id }}">{{ employee.name }} ({{ employee.role }})</option>
+                        <option value="{{ employee.id }}">{{ employee.name }} ({{ employee.position }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -159,104 +164,120 @@
     </div>
 
 <script>
-    // NOTE: Dark mode logic and updateToggleButton() should be available globally via theme.js 
-    // or embedded here if not using an external file.
+// Modal Functions
+function openGoalModal() {
+    document.getElementById('goalModal').style.display = 'flex';
+}
 
-    // Close modal on outside click (if not defined globally)
-    const goalModal = document.getElementById('goalModal');
-    window.onclick = function(event) {
-        if (event.target === goalModal) closeGoalModal();
+function closeGoalModal() {
+    document.getElementById('goalModal').style.display = 'none';
+    document.getElementById('assignGoalForm').reset();
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('goalModal');
+    if (event.target === modal) {
+        closeGoalModal();
     }
+}
 
-    // ========== GOAL MODAL LOGIC (JavaScript) ==========
-    
-    function openGoalModal() {
-        goalModal.style.display = 'flex';
-        // Set the minimum due date to tomorrow to prevent selecting past dates
-        const today = new Date();
-        today.setDate(today.getDate() + 1);
-        const minDate = today.toISOString().split('T')[0];
-        document.getElementById('dueDate').setAttribute('min', minDate);
-    }
+// Submit Goal Assignment
+function submitGoalAssignment(event) {
+    event.preventDefault();
 
-    function closeGoalModal() {
-        goalModal.style.display = 'none';
-        document.getElementById('assignGoalForm').reset(); // Clear form on close
-    }
+    const goalTitle = document.getElementById('goalTitle').value;
+    const employeeId = document.getElementById('employeeSelect').value;
+    const dueDate = document.getElementById('dueDate').value;
 
-    function submitGoalAssignment(event) {
-        event.preventDefault(); // Stop default form submission
-        
-        const goalTitle = document.getElementById('goalTitle').value;
-        const employeeSelect = document.getElementById('employeeSelect');
-        const employeeId = employeeSelect.value;
-        // Get the full text for the alert message
-        const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text.split('(')[0].trim(); 
-        const dueDate = document.getElementById('dueDate').value;
-
-        if (!employeeId) {
-            alert("Please select an employee.");
-            return;
-        }
-
-        // 1. Prepare data for backend (using JSON format)
-        const postData = {
+    fetch('/assign_goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
             title: goalTitle,
             employee_id: employeeId,
             due_date: dueDate
-        };
-
-        // 2. Send data to Flask backend (uncomment and implement this in main.py)
-        /*
-        fetch('/assign_goal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(postData)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(`✅ Goal assigned: "${goalTitle}" to ${employeeName}.`);
-                closeGoalModal();
-                window.location.reload(); // Reload page to show new goal
-            } else {
-                alert(`❌ Error assigning goal: ${data.message}`);
-            }
-        })
-        .catch(error => {
-            console.error('Network Error:', error);
-            alert('❌ Failed to connect to server to assign goal.');
-        });
-        */
-        
-        // Simulating a successful backend call
-        console.log('Goal Assignment Data:', postData);
-        alert(`✅ Goal assigned: "${goalTitle}" to ${employeeName}. (Backend Simulation)`);
-        closeGoalModal();
-    }
-    
-    function markGoalComplete(goalId) {
-        if (confirm(`Are you sure you want to mark Goal #${goalId} as complete? This action is irreversible.`)) {
-            // Placeholder: Send completion update to the backend
-            console.log(`Sending request to mark goal ${goalId} as complete.`);
-            
-            /*
-            fetch('/complete_goal/' + goalId, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`Goal #${goalId} marked complete!`);
-                    window.location.reload(); 
-                } else {
-                    alert(`❌ Error: ${data.message}`);
-                }
-            });
-            */
-            
-            alert(`Goal #${goalId} marked complete! (Backend Simulation)`);
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Goal assigned successfully!');
+            closeGoalModal();
+            window.location.reload();
+        } else {
+            alert(`❌ Error: ${data.message}`);
         }
+    })
+    .catch(error => {
+        alert('❌ Server Error: Could not assign goal');
+        console.error(error);
+    });
+}
+
+// Mark Goal as Complete
+function markGoalComplete(goalId) {
+    if (!confirm('Mark this goal as complete?')) {
+        return;
     }
-    
+
+    fetch('/complete_goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal_id: goalId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Goal marked as complete!');
+            window.location.reload();
+        } else {
+            alert(`❌ Error: ${data.message}`);
+        }
+    })
+    .catch(error => {
+        alert('❌ Server Error');
+        console.error(error);
+    });
+
+}
+
+
+// LinkedIn Modal (placeholder - implement as needed)
+function openLinkedInModal(event) {
+    event.preventDefault();
+    alert('LinkedIn Connect feature coming soon!');
+}
 </script>
+    <div id="linkedinModal" class="modal-linkedin">
+        <div class="modal-content-linkedin">
+            <span class="close-btn-linkedin" onclick="closeLinkedInModal()">&times;</span>
+            <h3>Post Your Completed Work</h3>
+            <p class="modal-description">Share your achievements on LinkedIn through WorkWise AI automation.</p>
+
+            <form id="linkedinWorkForm">
+                <div class="input-group-linkedin">
+                    <label for="workTitle">Title *</label>
+                    <input type="text" id="workTitle" placeholder="e.g., Completed Dashboard Feature" required>
+                </div>
+
+                <div class="input-group-linkedin">
+                    <label for="workDescription">Description *</label>
+                    <textarea id="workDescription" rows="5" placeholder="Describe what you accomplished..." required></textarea>
+                </div>
+
+                <div class="modal-actions-linkedin">
+                    <button type="button" class="cancel-linkedin" onclick="closeLinkedInModal()">Cancel</button>
+                    <button type="submit" class="connect-linkedin-btn">Post to LinkedIn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- LinkedIn Modal END -->
+
+    <!-- LinkedIn JS -->
+    <script src="{{ url_for('static', filename='js/linkedin.js') }}"></script>
+
+
 </body>
 </html>

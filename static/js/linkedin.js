@@ -13,31 +13,11 @@ function closeLinkedInModal() {
 }
 
 // ========== Form Submission ==========
-document.getElementById("linkedinWorkForm").addEventListener("submit", async function (e) {
+document.getElementById("linkedinWorkForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const title = document.getElementById("workTitle").value;
-    const description = document.getElementById("workDescription").value;
-
-    try {
-        const response = await fetch("/submit-work", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ title, description })
-        });
-
-        const result = await response.json();
-
-        if (result.status === "success") {
-            alert("✅ " + result.message);
-        } else {
-            alert("❌ " + result.message);
-        }
-
-    } catch (error) {
-        alert("⚠️ Error while posting. Please try again.");
-        console.error(error);
-    }
+    // ✅ Just show Coming Soon message
+    alert("🚀 LinkedIn Automation Coming Soon!");
 
     // Reset and close modal
     document.getElementById("linkedinWorkForm").reset();

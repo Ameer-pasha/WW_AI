@@ -22,24 +22,37 @@
             <p>Manager Portal</p>
         </div>
 
-        <nav class="nav-links">
-            <a href="{{ url_for('team_dashboard') }}">
-                <span class="material-icons">dashboard</span> Team Dashboard
-            </a>
-            <a href="{{ url_for('your_dashboard') }}">
-                <span class="material-icons">person</span> Your Dashboard
-            </a>
-            
-            <a href="{{ url_for('leaderboard') }}" class="active">
-                <span class="material-icons">leaderboard</span> Leaderboard
-            </a>
-            <a href="{{ url_for('insights') }}">
-                <span class="material-icons">auto_fix_high</span> AI Insights
-            </a>
-            <a href="#" onclick="openLinkedInModal(event)">
-                <span class="material-icons">share</span> LinkedIn Connect
-            </a>
-        </nav>
+<nav class="nav-links">
+    <a href="{{ url_for('team_dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'team_dashboard' else '' }}">
+        <span class="material-icons">dashboard</span> Team Dashboard
+    </a>
+
+    <a href="{{ url_for('your_dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'your_dashboard' else '' }}">
+        <span class="material-icons">person</span> Your Dashboard
+    </a>
+
+    <a href="{{ url_for('goals_management') }}"
+       class="{{ 'active' if request.endpoint == 'goals_management' else '' }}">
+        <span class="material-icons">flag</span> Goals
+    </a>
+
+    <a href="{{ url_for('leaderboard') }}"
+       class="{{ 'active' if request.endpoint == 'leaderboard' else '' }}">
+        <span class="material-icons">leaderboard</span> Leaderboard
+    </a>
+
+    <a href="{{ url_for('insights') }}"
+       class="{{ 'active' if request.endpoint == 'insights' else '' }}">
+        <span class="material-icons">auto_fix_high</span> AI Insights
+    </a>
+
+    <a href="#" onclick="openLinkedInModal(event)">
+        <span class="material-icons">share</span> LinkedIn Connect
+    </a>
+</nav>
+
 
         <div class="utility-section">
             <button id="mode-toggle" onclick="toggleDarkMode()">

@@ -85,9 +85,11 @@ class Employee(db.Model):
 class Goal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100))
-    target = db.Column(db.Integer)
-    completed = db.Column(db.Integer)
-    month = db.Column(db.String(20))
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))  # FIXED
+    due_date = db.Column(db.Date)
+    status = db.Column(db.String(50))
+    completion_date = db.Column(db.Date, nullable=True)
+    employee = db.relationship('Employee', backref='goals')
 
 
 class Bonus(db.Model):
@@ -554,11 +556,16 @@ def team_dashboard():
     avg_performance = sum([e.performance_score for e in team_members]) / len(team_members) if team_members else 0
     total_commits = sum([e.commits or 0 for e in team_members])
 
-    # Get current month goal
-    current_month = datetime.now().strftime("%B-%Y")
-    current_goal = Goal.query.filter_by(month=current_month).first()
-    goals_completed = current_goal.completed if current_goal else 0
-    goals_target = current_goal.target if current_goal else 10
+    # Get goals for this manager's team
+    from datetime import datetime, timedelta
+
+    # Get all goals for team members
+    team_employee_ids = [e.id for e in team_members]
+    all_goals = Goal.query.filter(Goal.employee_id.in_(team_employee_ids)).all() if team_employee_ids else []
+
+    # Calculate goal completion
+    goals_completed = len([g for g in all_goals if g.status == "Completed"])
+    goals_target = len(all_goals) if all_goals else 10  # Default to 10 if no goals
     goal_progress = (goals_completed / goals_target * 100) if goals_target > 0 else 0
 
     # Summary cards data for the template
@@ -633,7 +640,6 @@ def team_dashboard():
         employee_list=employee_list
     )
 
-
 @app.route("/employee/<int:employee_id>")
 @login_required
 def employee_detail(employee_id):
@@ -643,7 +649,7 @@ def employee_detail(employee_id):
         return redirect(url_for("your_dashboard"))
 
     employee = Employee.query.get(employee_id)
-    return render_template("employee-detail-view.html", employee=employee)
+    return render_template("employee-detail-view.html", employee=employee, active_page="employees")
 
 
 @app.route("/insights")
@@ -661,9 +667,11 @@ def insights():
         attention_needed = sorted(team_members, key=lambda e: e.performance_score)[:5]
         avg_performance = sum([e.performance_score for e in team_members]) / len(team_members) if team_members else 0
 
-        current_month = datetime.now().strftime("%B-%Y")
-        current_goal = Goal.query.filter_by(month=current_month).first()
-        goal_completion_rate = int((current_goal.completed / current_goal.target * 100)) if current_goal and current_goal.target > 0 else 0
+        team_employee_ids = [e.id for e in team_members]
+        all_goals = Goal.query.filter(Goal.employee_id.in_(team_employee_ids)).all() if team_employee_ids else []
+        goals_completed = len([g for g in all_goals if g.status == "Completed"])
+        goals_target = len(all_goals) if all_goals else 10
+        goal_completion_rate = int((goals_completed / goals_target * 100)) if goals_target > 0 else 0
 
         # AI Suggestions for Manager
         low_count = len([e for e in team_members if e.performance_score < 70])
@@ -1001,7 +1009,98 @@ def submit_work():
         print("WEBHOOK ERROR:", e)  # ✅ Debug line
         return jsonify({"status": "error", "message": "Failed to post. Please try again."}), 500
 
+@app.route('/goals')
+@login_required
+def goals_management():
+    user = User.query.get(session['user_id'])
 
+    assigned_goals = (
+        db.session.query(Goal)
+        .join(Employee)
+        .filter(Employee.manager_id == user.id, Goal.status == "Assigned")
+        .all()
+    )
+
+    completed_goals = (
+        db.session.query(Goal)
+        .join(Employee)
+        .filter(Employee.manager_id == user.id, Goal.status == "Completed")
+        .order_by(Goal.id.desc())
+        .limit(5)
+        .all()
+    )
+
+    all_employees = Employee.query.filter_by(manager_id=user.id).all()
+
+    return render_template(
+        'goals.html',
+        user=user,
+        assigned_goals=assigned_goals,
+        completed_goals=completed_goals,
+        all_employees=all_employees
+    )
+
+
+@app.route('/assign_goal', methods=['POST'])
+@login_required
+def assign_goal():
+    data = request.get_json()
+    title = data.get('title')
+    employee_id = data.get('employee_id')
+    due_date = data.get('due_date')
+
+    if not title or not employee_id or not due_date:
+        return jsonify({"success": False, "message": "Missing required fields"}), 400
+
+    goal = Goal(
+        title=title,
+        employee_id=employee_id,
+        due_date=datetime.strptime(due_date, "%Y-%m-%d").date(),
+        status="Assigned"
+    )
+    db.session.add(goal)
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Goal assigned successfully"})
+
+
+# ADD THIS NEW ROUTE HERE ⬇️
+@app.route('/complete_goal', methods=['POST'])
+@login_required
+def complete_goal():
+    """Mark a goal as completed"""
+    try:
+        data = request.get_json()
+        goal_id = data.get('goal_id')
+
+        if not goal_id:
+            return jsonify({"success": False, "message": "Goal ID is required"}), 400
+
+        goal = Goal.query.get(goal_id)
+
+        if not goal:
+            return jsonify({"success": False, "message": "Goal not found"}), 404
+
+        # Verify the user is the manager of this employee
+        user = User.query.get(session['user_id'])
+        if user.role != 'Manager':
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        employee = Employee.query.get(goal.employee_id)
+        if not employee or employee.manager_id != user.id:
+            return jsonify({"success": False, "message": "Unauthorized to complete this goal"}), 403
+
+        # Mark goal as completed
+        goal.status = "Completed"
+        goal.completion_date = datetime.utcnow().date()
+
+        db.session.commit()
+
+        return jsonify({"success": True, "message": "Goal marked as complete"})
+
+    except Exception as e:
+        print(f"Error completing goal: {str(e)}")
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 # IN FUTURE FOR DYNAMIC VALUES:
 # class GoalTracking(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
