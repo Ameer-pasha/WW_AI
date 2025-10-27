@@ -1075,3 +1075,100 @@ body.dark-mode .cancel-linkedin {
 .connect-linkedin-btn:hover {
     background-color: #0056b3;
 }
+
+/* ====================================================== */
+/* Goals Page Specific Styles (goals-styles.css)          */
+/* ====================================================== */
+
+.goal-assignment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.goal-assignment-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.assign-button {
+    background-color: var(--color-primary-green);
+    color: var(--color-text-light);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.assign-button:hover {
+    background-color: #218838;
+}
+
+/* Goal Tables */
+.goal-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+.goal-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.goal-table th, .goal-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+/* Apply dark mode styles to table borders */
+body.dark-mode .goal-table th, body.dark-mode .goal-table td {
+    border-bottom-color: #3C3C5A;
+}
+.goal-table th {
+    font-weight: 600;
+    color: var(--color-light-grey);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.goal-table tr:hover {
+    background-color: #f8f9fa;
+}
+body.dark-mode .goal-table tr:hover {
+    background-color: #2A2A4A;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-size: 0.8em;
+    font-weight: 700;
+}
+.status-completed { background-color: #D4EDDA; color: #155724; }
+.status-pending { background-color: #FFF3CD; color: #856404; }
+.status-overdue { background-color: #F8D7DA; color: #721C24; }
+
+/* Apply dark mode styles to status badges */
+body.dark-mode .status-completed { background-color: #1A381A; color: #5CB85C; }
+body.dark-mode .status-pending { background-color: #38301A; color: #FFA000; }
+body.dark-mode .status-overdue { background-color: #3B1E22; color: #FF6B6B; }
+
+/* Goal Assignment Modal Styling (Adapting existing modal styles in styles.css) */
+/* The general .modal and .modal-content classes should exist in styles.css */
+/* If the general modal styles are not global, copy them from leaderboard.html's script block into styles.css */
+
+/* Select Dropdown Styling */
+.input-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95em;
+    background-color: var(--color-card-background);
+    color: var(--color-text-dark);
+}
