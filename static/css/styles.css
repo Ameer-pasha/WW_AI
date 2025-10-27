@@ -562,7 +562,7 @@ body.dark-mode .activity-item { border-bottom-color: #3C3C5A; }
 .employee-score.green { background-color: var(--color-primary-green); color: var(--color-text-light); }
 .employee-score.yellow { background-color: var(--color-accent-orange); color: var(--color-text-light); }
 
-/* Search Bar (reused) */
+/* Search Bar (reused) */ 
 .search-bar {
     display: flex;
     align-items: center;
@@ -684,12 +684,13 @@ body.dark-mode .leaderboard-item.top-performer {
 .metric-item .material-icons { font-size: 16px; margin-right: 4px; }
         
 .leaderboard-score {
-    font-weight: 700;
+    font-weight: 400;
     padding: 8px 12px;
     border-radius: 8px;
-    color: var(--color-text-light);
+    color: #4fc166; 
     margin-right: 20px;
 }
+
         
 .reward-btn {
     background-color: var(--color-primary-green);
@@ -944,4 +945,133 @@ body.dark-mode .suggestion-item.impact { background-color: #1A381A; }
     font-weight: 600;
     font-size: 14px;
     margin-bottom: 5px;
+}
+
+/* ====================================================== */
+/* 8. LINKEDIN CONNECT MODAL STYLES                       */
+/* ====================================================== */
+
+/* Modal Backdrop */
+.modal-linkedin {
+    display: none; 
+    position: fixed;
+    z-index: 1000; /* Ensure it is above everything else */
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); 
+    padding-top: 50px;
+    backdrop-filter: blur(3px); /* Optional: Adds a nice blur effect */
+}
+
+/* Modal Content Box */
+.modal-content-linkedin {
+    background-color: var(--color-card-background);
+    margin: 8% auto; 
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    animation: fadeIn 0.3s;
+}
+
+body.dark-mode .modal-content-linkedin {
+    box-shadow: 0 5px 25px rgba(255, 255, 255, 0.1);
+}
+
+/* Close Button (Cross Mark) */
+.close-btn-linkedin {
+    color: #aaa; 
+    position: absolute;
+    top: 15px; 
+    right: 25px; 
+    font-size: 32px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: color 0.2s;
+}
+.close-btn-linkedin:hover, .close-btn-linkedin:focus { 
+    color: var(--color-text-dark); 
+    text-decoration: none; 
+}
+
+/* Text and Input Styling */
+.modal-content-linkedin h3 {
+    color: var(--color-primary-blue);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.modal-description {
+    font-size: 14px;
+    color: var(--color-light-grey);
+    margin-bottom: 25px;
+}
+
+.input-group-linkedin label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.input-group-linkedin input[type="url"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 15px;
+    margin-bottom: 20px;
+    background-color: var(--color-card-background);
+    color: var(--color-text-dark);
+}
+body.dark-mode .input-group-linkedin input[type="url"] {
+    border-color: #444;
+    background-color: #343468;
+}
+
+/* File Input Customization */
+.input-group-linkedin input[type="file"] {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* Actions Buttons */
+.modal-actions-linkedin {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.modal-actions-linkedin button {
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.cancel-linkedin { 
+    background-color: #E9ECEF; 
+    color: var(--color-text-dark); 
+}
+body.dark-mode .cancel-linkedin { 
+    background-color: #444; 
+    color: var(--color-text-dark); 
+}
+
+.connect-linkedin-btn {
+    background-color: var(--color-primary-blue);
+    color: var(--color-text-light);
+}
+.connect-linkedin-btn:hover {
+    background-color: #0056b3;
 }
