@@ -1037,6 +1037,9 @@ def employee_performance_data(employee_id):
 # ==========================
 # RUN APP
 # ==========================
+
+
+
 if __name__ == "__main__":
     with app.app_context():
         if not os.path.exists(os.path.join(BASE_DIR, "workwise.db")):
