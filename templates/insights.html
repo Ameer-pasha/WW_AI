@@ -200,6 +200,31 @@
         {% endfor %}
     </div>
 
+    <!-- AI Insights Section -->
+    <section id="aiInsightsSection" class="p-4 bg-white rounded-xl shadow mt-4">
+        <h2 class="text-2xl font-bold mb-3">🤖 WorkWise AI Insights</h2>
+        <p id="aiInsightsText" class="text-gray-700 whitespace-pre-line">Loading AI insights...</p>
+    </section>
+
+    <script>
+    async function loadAIInsights() {
+        try {
+            const res = await fetch("/ai/insights_local");
+            const data = await res.json();
+            const el = document.getElementById("aiInsightsText");
+            if (data.success) {
+                el.textContent = data.insights;
+            } else {
+                el.textContent = "⚠️ Unable to fetch AI insights: " + (data.error || "Unknown error");
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("aiInsightsText").textContent = "⚠️ Server unreachable.";
+        }
+    }
+    window.addEventListener("load", loadAIInsights);
+    </script>
+
 </main>
 
 <script>

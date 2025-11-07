@@ -293,3 +293,20 @@ site/
 *.css.map
 *.sass.map
 *.scss.map
+.clinerules/byterover-rules.md
+.kilocode/rules/byterover-rules.md
+.roo/rules/byterover-rules.md
+.windsurf/rules/byterover-rules.md
+.cursor/rules/byterover-rules.mdc
+.kiro/steering/byterover-rules.md
+.qoder/rules/byterover-rules.md
+.augment/rules/byterover-rules.md
+
+
+# Local AI / model files
+chroma_db/
+chroma_db/*
+*.db
+.env
+__pycache__/
+*.pyc
