@@ -1218,6 +1218,18 @@ body.dark-mode .status-overdue { background-color: #3B1E22; color: #FF6B6B; }
     background-color: var(--color-card-background);
     color: var(--color-text-dark);
 }
+#aiInsightsSection {
+  line-height: 1.6;
+}
+
+#aiInsightsSection b {
+  color: #1e3a8a; /* deep blue for headings */
+}
+
+#aiInsightsText {
+  font-family: "Inter", sans-serif;
+  white-space: pre-line;
+}
 
 /* ====================================================== */
 /* 9. AI PDF REPORT MODAL STYLES (NEW) */

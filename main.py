@@ -5,6 +5,14 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import requests
+from dotenv import load_dotenv
+load_dotenv()   # will read .env in project root
+
+# local ai imports
+from ai_local.ingest_local import ingest_text
+from ai_local.embeddings_local import embed_texts
+from ai_local.vectorstore_local import query as chroma_query
+from ai_local.rag_agent import ask as rag_ask
 
 # ==========================
 # AI CONFIGURATION
@@ -24,6 +32,127 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'workwise.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Add route to ingest content for an employee (POST)
+@app.route("/ai/ingest_local", methods=["POST"])
+def ai_ingest_local():
+    """
+    POST JSON: { "employee_id": "...", "source": "...", "content": "...", "extra_meta": {...} }
+    """
+    payload = request.get_json() or {}
+    employee_id = payload.get("employee_id")
+    source = payload.get("source", "user_post")
+    content = payload.get("content", "")
+    extra = payload.get("extra_meta", {})
+
+    if not employee_id or not content:
+        return jsonify({"success": False, "message": "employee_id and content required"}), 400
+
+    try:
+        num_chunks = ingest_text(employee_id=employee_id, source=source, text=content, extra_meta=extra)
+        return jsonify({"success": True, "stored_chunks": num_chunks})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Add route to ask AI via local LLaMA + RAG
+@app.route("/ai/suggest_local", methods=["GET","POST"])
+def ai_suggest_local():
+    """
+    GET params: employee_id, q (question)
+    POST JSON: { "employee_id": "...", "q": "..."}
+    """
+    if request.method == "POST":
+        payload = request.get_json() or {}
+        employee_id = payload.get("employee_id")
+        q = payload.get("q", "Give actionable suggestions")
+    else:
+        employee_id = request.args.get("employee_id")
+        q = request.args.get("q", "Give actionable suggestions")
+
+    if not employee_id:
+        return jsonify({"success": False, "message": "employee_id required"}), 400
+
+    # Pull employee metadata from your SQLAlchemy models (modify as per your models)
+    try:
+        emp = Employee.query.get(employee_id)
+        if not emp:
+            emp_meta = {"employee_id": str(employee_id)}
+        else:
+            # Example metadata mapping - adapt to your Employee model fields
+            emp_meta = {
+                "employee_id": str(emp.id),
+                "name": emp.name,
+                "role": getattr(emp, "role", "employee"),
+                "performance_score": getattr(emp, "performance_score", None),
+                "goals": [g.title for g in getattr(emp, "goals", [])] if getattr(emp, "goals", None) else []
+            }
+    except Exception:
+        emp_meta = {"employee_id": str(employee_id)}
+
+    # Use rag_agent to process and get a JSON answer
+    try:
+        raw_answer = rag_ask(employee_meta=emp_meta, employee_id=employee_id, question=q, top_k=5)
+        return jsonify({"success": True, "response": raw_answer})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/ai/insights_local", methods=["GET"])
+def ai_insights_local():
+    """
+    Analyze all employee and manager data, summarize it, and get AI insights.
+    """
+    try:
+        # Step 1 — Collect data from DB
+        employees = Employee.query.all()
+        goals = Goal.query.all() if 'Goal' in globals() else []
+        feedbacks = Feedback.query.all() if 'Feedback' in globals() else []
+
+        total_employees = len(employees)
+        avg_performance = sum([getattr(e, "performance_score", 0) for e in employees]) / total_employees if total_employees else 0
+        completed_goals = sum([1 for g in goals if getattr(g, "status", "").lower() == "completed"])
+        pending_goals = sum([1 for g in goals if getattr(g, "status", "").lower() != "completed"])
+        feedback_count = len(feedbacks)
+
+        # Step 2 — Format summary
+        summary_text = f"""
+        Company Snapshot:
+        - Total Employees: {total_employees}
+        - Average Performance Score: {avg_performance:.2f}
+        - Completed Goals: {completed_goals}
+        - Pending Goals: {pending_goals}
+        - Total Feedback Entries: {feedback_count}
+        """
+
+        # Optional: add a few employee highlights
+        top_emps = sorted(employees, key=lambda e: getattr(e, "performance_score", 0), reverse=True)[:5]
+        summary_text += "\n\nTop Performers:\n" + "\n".join([f"{e.name}: {getattr(e, 'performance_score', 'N/A')}" for e in top_emps])
+
+        # Step 3 — Create the AI prompt
+        from ai_local.llama_local import call_local_llama
+
+        prompt = f"""
+        You are the WorkWise AI analyst. Analyze the data below and generate insights that would help improve team performance,
+        morale, and efficiency. Be concise and actionable.
+
+        Data Summary:
+        {summary_text}
+
+        Format:
+        - Key Observations
+        - Actionable Recommendations
+        - Overall Sentiment
+        """
+
+        # Step 4 — Call local LLaMA via Ollama
+        insights = call_local_llama(prompt)
+
+        return jsonify({
+            "success": True,
+            "insights": insights
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
