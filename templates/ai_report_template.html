@@ -1,68 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>WorkWise AI Report</title>
-  <style>
-    body { font-family: "Segoe UI", Arial, sans-serif; color:#222; margin: 30px; line-height:1.5; }
-    header { text-align:center; margin-bottom:20px; }
-    h1 { color:#0f172a; font-size:24px; margin-bottom:6px; }
-    .meta { color:#666; font-size:12px; margin-bottom:12px; }
-    hr { border:none; height:1px; background:#e6edf3; margin:18px 0; }
-    h2 { color:#2563eb; border-bottom:1px solid #e6edf3; padding-bottom:4px; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; }
-    th, td { padding:8px 10px; border:1px solid #ddd; }
-    th { background:#f5f9ff; color:#0b5ed7; text-align:left; }
-    .insights { background:#f8fafc; border:1px solid #e6edf3; padding:12px; white-space:pre-wrap; }
-    footer { text-align:center; font-size:10px; color:#777; margin-top:30px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>WorkWise AI - Executive Performance Report</title>
+    <style>
+        @page {
+            margin: 1in 0.75in;
+        }
+
+        body {
+            font-family: "Segoe UI", "Inter", sans-serif;
+            background: #f4f6f9;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: #1e3a8a;
+            color: white;
+            padding: 25px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 5px solid #2563eb;
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        .header-left p {
+            font-size: 13px;
+            margin: 4px 0 0;
+            color: #cbd5e1;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 13px;
+            color: #bfdbfe;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            background: #ffffff;
+            margin: 40px auto;
+            padding: 50px 60px;
+            border-radius: 14px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            color: #1e3a8a;
+            border-left: 5px solid #2563eb;
+            padding-left: 12px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        h3 {
+            color: #1d4ed8;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* ===== METRICS GRID ===== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.03);
+        }
+
+        .metric-card h4 {
+            margin: 5px 0;
+            color: #1e3a8a;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .metric-card p {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-top: 5px;
+        }
+
+        /* ===== TOP PERFORMERS ===== */
+        .top-performers {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+
+        .top-performers li {
+            background: #f8fafc;
+            border-left: 5px solid #2563eb;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .top-performers li strong {
+            color: #0f172a;
+        }
+
+        /* ===== AI INSIGHTS ===== */
+        .ai-section {
+            background: #f0f4ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-top: 25px;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .ai-section strong {
+            color: #1e3a8a;
+        }
+
+        .ai-section h3 {
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        /* ===== TABLES ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+            font-size: 14px;
+        }
+
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            background: #1e3a8a;
+            color: #e2e8f0;
+            padding: 10px;
+            font-size: 12px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .highlight {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+    </style>
 </head>
 <body>
-  <header>
-    <h1>WorkWise AI Report</h1>
-    <div class="meta"><b>Generated on:</b> {{ date }}</div>
-  </header>
-
-  <section>
-    <h2>Company Snapshot</h2>
-    <p><b>Total Employees:</b> {{ total_employees }}</p>
-    <p><b>Average Performance Score:</b> {{ avg_performance }}</p>
-    <p><b>Completed Goals:</b> {{ completed_goals }}</p>
-    <p><b>Pending Goals:</b> {{ pending_goals }}</p>
-    <p><b>Total Feedback Entries:</b> {{ feedback_count }}</p>
-  </section>
-
-  <section>
-  <h2>Top Performers</h2>
-  <table>
-    <thead>
-      <tr><th>#</th><th>Name</th><th>Score</th></tr>
-    </thead>
-    <tbody>
-      {% for emp in top_performers %}
-      <tr>
-        <td>{{ loop.index }}</td>
-        <td>{{ emp.name }}</td>
-        <td>{{ emp.score }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-
-  <section>
-    <h2>AI Insights</h2>
-    <div class="insights">
-      {% if insights %}
-        {{ insights|safe }}
-      {% else %}
-        {{ fallback_summary|safe }}
-      {% endif %}
+<header>
+    <div class="header-left">
+        <h1>WorkWise AI - Performance Report</h1>
+        <p>Smart insights, data-driven recommendations</p>
     </div>
-  </section>
+    <div class="header-right">
+        <p><strong>Generated:</strong> {{ date }}</p>
+        <p><strong>Report ID:</strong> {{ total_employees }}E{{ completed_goals }}G</p>
+    </div>
+</header>
 
-  <hr>
-  <footer>Auto-generated by WorkWise AI — Confidential Internal Use Only</footer>
+<div class="container">
+    <h2>📋 Overview Summary</h2>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h4>Total Employees</h4>
+            <p>{{ total_employees }}</p>
+        </div>
+        <div class="metric-card">
+            <h4>Average Performance</h4>
+            <p class="highlight">{{ avg_performance }}/100</p>
+        </div>
+        <div class="metric-card">
+            <h4>Goals Completed</h4>
+            <p>{{ completed_goals }}</p>
+        </div>
+        <div class="metric-card">
+            <h4>Pending Goals</h4>
+            <p>{{ pending_goals }}</p>
+        </div>
+        <div class="metric-card">
+            <h4>Feedback Entries</h4>
+            <p>{{ feedback_count }}</p>
+        </div>
+    </div>
+
+    <h2>🏅 Top Performers</h2>
+    {% if top_performers %}
+    <ul class="top-performers">
+        {% for e in top_performers %}
+        <li><strong>{{ e.name }}</strong> — {{ e.score }} pts</li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No top performers for this period.</p>
+    {% endif %}
+
+    <div class="page-break"></div>
+
+    <h2>💡 AI Insights & Recommendations</h2>
+    <div class="ai-section">
+        {% if insights %}
+            {{ insights|safe }}
+        {% else %}
+            <p>No AI insights available. Please re-run the analysis.</p>
+        {% endif %}
+    </div>
+
+    <h2>📈 Performance Data Summary</h2>
+    <table>
+        <thead>
+            <tr><th>Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Total Employees</td><td>{{ total_employees }}</td></tr>
+            <tr><td>Average Score</td><td>{{ avg_performance }}</td></tr>
+            <tr><td>Goals Completed</td><td>{{ completed_goals }}</td></tr>
+            <tr><td>Pending Goals</td><td>{{ pending_goals }}</td></tr>
+            <tr><td>Feedback Count</td><td>{{ feedback_count }}</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<footer>
+    © {{ date.split()[0] }} WorkWise AI — Confidential Internal Report
+</footer>
 </body>
 </html>
