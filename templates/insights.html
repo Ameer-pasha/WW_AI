@@ -14,7 +14,6 @@
 
 <aside class="sidebar">
     <div class="logo-section">
-        
         <h1>WorkWise AI</h1>
         <p>
             {% if user.role == "Manager" %}
@@ -25,59 +24,58 @@
         </p>
     </div>
 
-<nav class="nav-links">
-    {% if user.role == "Manager" %}
-        <a href="{{ url_for('team_dashboard') }}"
-           class="{{ 'active' if request.endpoint == 'team_dashboard' else '' }}">
-            <span class="material-icons">dashboard</span> Team Dashboard
-        </a>
+    <nav class="nav-links">
+        {% if user.role == "Manager" %}
+            <a href="{{ url_for('team_dashboard') }}"
+               class="{{ 'active' if request.endpoint == 'team_dashboard' else '' }}">
+                <span class="material-icons">dashboard</span> Team Dashboard
+            </a>
 
-        <a href="{{ url_for('your_dashboard') }}"
-           class="{{ 'active' if request.endpoint == 'your_dashboard' else '' }}">
-            <span class="material-icons">person</span> Your Dashboard
-        </a>
+            <a href="{{ url_for('your_dashboard') }}"
+               class="{{ 'active' if request.endpoint == 'your_dashboard' else '' }}">
+                <span class="material-icons">person</span> Your Dashboard
+            </a>
 
-        <a href="{{ url_for('goals_management') }}"
-           class="{{ 'active' if request.endpoint == 'goals_management' else '' }}">
-            <span class="material-icons">flag</span> Goals
-        </a>
+            <a href="{{ url_for('goals_management') }}"
+               class="{{ 'active' if request.endpoint == 'goals_management' else '' }}">
+                <span class="material-icons">flag</span> Goals
+            </a>
 
-        <a href="{{ url_for('leaderboard') }}"
-           class="{{ 'active' if request.endpoint == 'leaderboard' else '' }}">
-            <span class="material-icons">leaderboard</span> Leaderboard
-        </a>
+            <a href="{{ url_for('leaderboard') }}"
+               class="{{ 'active' if request.endpoint == 'leaderboard' else '' }}">
+                <span class="material-icons">leaderboard</span> Leaderboard
+            </a>
 
-        <a href="{{ url_for('insights') }}"
-           class="{{ 'active' if request.endpoint == 'insights' else '' }}">
-            <span class="material-icons">auto_fix_high</span> AI Insights
-        </a>
+            <a href="{{ url_for('insights') }}"
+               class="{{ 'active' if request.endpoint == 'insights' else '' }}">
+                <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
 
-        <a href="#" onclick="openLinkedInModal(event)">
-            <span class="material-icons">share</span> LinkedIn Connect
-        </a>
+            <a href="#" onclick="openLinkedInModal(event)">
+                <span class="material-icons">share</span> LinkedIn Connect
+            </a>
+        {% else %}
+            <a href="{{ url_for('your_dashboard') }}"
+               class="{{ 'active' if request.endpoint == 'your_dashboard' else '' }}">
+                <span class="material-icons">person</span> Your Dashboard
+            </a>
 
-    {% else %}
-        <a href="{{ url_for('your_dashboard') }}"
-           class="{{ 'active' if request.endpoint == 'your_dashboard' else '' }}">
-            <span class="material-icons">person</span> Your Dashboard
-        </a>
+            <a href="{{ url_for('insights') }}"
+               class="{{ 'active' if request.endpoint == 'insights' else '' }}">
+                <span class="material-icons">auto_fix_high</span> AI Insights
+            </a>
 
-        <a href="{{ url_for('insights') }}"
-           class="{{ 'active' if request.endpoint == 'insights' else '' }}">
-            <span class="material-icons">auto_fix_high</span> AI Insights
-        </a>
-
-        <a href="#" onclick="openLinkedInModal(event)">
-            <span class="material-icons">share</span> LinkedIn Connect
-        </a>
-    {% endif %}
-</nav>
+            <a href="#" onclick="openLinkedInModal(event)">
+                <span class="material-icons">share</span> LinkedIn Connect
+            </a>
+        {% endif %}
+    </nav>
 
     <div class="utility-section">
         <button id="mode-toggle" onclick="toggleDarkMode()">
-    <span class="material-icons">dark_mode</span> 
-    <span class="mode-text">Dark Mode</span> 
-</button>
+            <span class="material-icons">dark_mode</span> 
+            <span class="mode-text">Dark Mode</span> 
+        </button>
         <a href="{{ url_for('logout') }}" class="logout">
             <span class="material-icons">logout</span> Logout
         </a>
@@ -85,7 +83,6 @@
 </aside>
 
 <main class="main-content">
-
     <header class="dashboard-header">
         <h2>AI Insights</h2>
         <p>Smart analytics and recommendations for better decisions</p>
@@ -100,7 +97,6 @@
         <div class="chart-container">
             <canvas id="teamPerformanceChart"></canvas>
         </div>
-        
     </div>
 
     <!-- AI Summary Cards -->
@@ -222,7 +218,6 @@
     }
     window.addEventListener("load", loadAIInsights);
     </script>
-
 </main>
 
 <script>
@@ -245,30 +240,26 @@
     }
 
     function updateToggleButton(isDarkMode) {
-    const iconSpan = modeToggle.querySelector('.material-icons');
-    // CRITICAL: Target the new .mode-text span
-    const textSpan = modeToggle.querySelector('.mode-text'); 
-
-    if (isDarkMode) {
-        iconSpan.textContent = 'light_mode';
-        textSpan.textContent = ' Light Mode'; 
-    } else {
-        iconSpan.textContent = 'dark_mode';
-        textSpan.textContent = ' Dark Mode'; 
+        const iconSpan = modeToggle.querySelector('.material-icons');
+        const textSpan = modeToggle.querySelector('.mode-text'); 
+        if (isDarkMode) {
+            iconSpan.textContent = 'light_mode';
+            textSpan.textContent = ' Light Mode'; 
+        } else {
+            iconSpan.textContent = 'dark_mode';
+            textSpan.textContent = ' Dark Mode'; 
+        }
     }
-}
 </script>
 
-<!-- CORRECTED: Load the team performance chart script -->
 <script src="{{ url_for('static', filename='js/performanceChart.js') }}"></script>
 
-    <!-- LinkedIn Modal START -->
+<!-- LinkedIn Modal -->
 <div id="linkedinModal" class="modal-linkedin">
     <div class="modal-content-linkedin">
         <span class="close-btn-linkedin" onclick="closeLinkedInModal()">&times;</span>
         <h3>Post Your Completed Work</h3>
         <p class="modal-description">Share your achievements on LinkedIn through WorkWise AI automation.</p>
-
 
         <form id="linkedinWorkForm">
             <div class="input-group-linkedin">
@@ -288,19 +279,16 @@
         </form>
     </div>
 </div>
-<!-- LinkedIn Modal END -->
-
 <script src="{{ url_for('static', filename='js/linkedin.js') }}"></script>
 
-<div id="pdfReportModal" class="modal" **style="display: none;"**>
+<!-- PDF Report Modal -->
+<div id="pdfReportModal" class="modal" style="display: none;">
     <div class="modal-content pdf-modal-content">
         <span class="close-btn" onclick="closePdfReportModal()">&times;</span>
-        
         <h3 class="modal-title-report">AI Monthly Performance Report</h3>
         <p class="text-secondary modal-subtitle-report">Generated on: <span id="report-date">Nov 9, 2025</span></p>
 
         <div class="report-scroll-area">
-            
             <section class="report-section">
                 <h4>🎯 Key Takeaways & Summary</h4>
                 <p>The team demonstrated a strong focus on high-priority tasks, leading to a **+12% increase in Team KPIs** this period. Overall performance remains high, but minor score variance indicates a need for targeted support for a few employees.</p>
@@ -327,7 +315,7 @@
             <section class="report-section">
                 <h4>⭐ Top Performer Spotlight</h4>
                 {% if top_performers %}
-                <p>Congratulations to **{{ top_performers[0].name }}** ({{ top_performers[0].performance_score }} pts) for leading the team this period. Their consistent commitment to code quality and delivery is commendable.</p>
+                <p>Congratulations to **{{ top_performers[0].name }}** ({{ top_performers[0].performance_score }} pts) for leading the team this period.</p>
                 {% else %}
                 <p>No top performers data available this period.</p>
                 {% endif %}
@@ -335,10 +323,9 @@
             
             <section class="report-section">
                 <h4>📝 Detailed AI Recommendations</h4>
-                <p><strong>Recommendation 1 (Team Health):</strong> Schedule brief 15-minute check-ins with employees whose scores are below 70% to identify potential burnout or blockers. This proactive step can prevent minor issues from becoming major performance dips.</p>
-                <p><strong>Recommendation 2 (Efficiency):</strong> Analyze the deployment pipeline to ensure employees have the necessary resources and tooling. High effort metrics combined with low output may indicate a bottleneck in their workflow.</p>
-                <p><strong>Recommendation 3 (Goal Setting):</strong> For high performers, consider assigning one "stretch" goal per quarter focused on professional development or mentorship to encourage growth and knowledge transfer.</p>
-                <p>--- End of Report Placeholder Content ---</p>
+                <p><strong>Recommendation 1 (Team Health):</strong> Schedule brief 15-minute check-ins with employees whose scores are below 70% to identify potential burnout or blockers.</p>
+                <p><strong>Recommendation 2 (Efficiency):</strong> Analyze the deployment pipeline to ensure employees have the necessary resources and tooling.</p>
+                <p><strong>Recommendation 3 (Goal Setting):</strong> For high performers, consider assigning one "stretch" goal per quarter focused on professional development or mentorship.</p>
             </section>
         </div>
         
@@ -347,48 +334,47 @@
         </div>
     </div>
 </div>
+
 <script>
-    // Get the modal element
     const pdfReportModal = document.getElementById('pdfReportModal');
 
-    // Function to OPEN the modal
     function openPdfReportModal() {
-        // Set the backdrop to be visible and allow the content to center
-        pdfReportModal.style.display = 'flex'; 
-        
-        // Update the date dynamically
+        pdfReportModal.style.display = 'flex';
         document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            year: 'numeric', month: 'long', day: 'numeric'
         });
     }
 
-    // Function to CLOSE the modal
     function closePdfReportModal() {
         pdfReportModal.style.display = 'none';
     }
 
-    // Function to handle the actual download (simulation)
+    // Trigger real AI PDF download
     function confirmPdfDownload() {
-        alert("✅ Starting download for the AI Monthly Performance Report!");
         closePdfReportModal();
+        const loading = document.createElement('div');
+        loading.textContent = '⏳ Generating AI Report... Please wait.';
+        loading.style.cssText = 'position:fixed;top:10px;right:10px;background:#2563eb;color:white;padding:10px 14px;border-radius:6px;';
+        document.body.appendChild(loading);
+
+        const link = document.createElement('a');
+        link.href = '/download_ai_report';
+        link.download = 'WorkWise_AI_Report.pdf';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            document.body.removeChild(loading);
+        }, 4000);
     }
-    
-    // CRITICAL: Ensure the existing "Download PDF" button in the card triggers this modal
+
     document.addEventListener('DOMContentLoaded', () => {
         const cardDownloadBtn = document.querySelector('.report-card .download-btn');
-        if (cardDownloadBtn) {
-            // Replaces the default button action with the modal trigger
-            cardDownloadBtn.setAttribute('onclick', 'openPdfReportModal()');
-        }
+        if (cardDownloadBtn) cardDownloadBtn.setAttribute('onclick', 'openPdfReportModal()');
     });
 
-    // Close modal on outside click
     window.onclick = function(event) {
-        if (event.target == pdfReportModal) {
-            closePdfReportModal();
-        }
+        if (event.target == pdfReportModal) closePdfReportModal();
     }
 </script>
 

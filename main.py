@@ -32,6 +32,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'workwise.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.jinja_env.globals.update(enumerate=enumerate)
 
 # Add route to ingest content for an employee (POST)
 @app.route("/ai/ingest_local", methods=["POST"])
@@ -1201,6 +1202,146 @@ def complete_goal():
     except Exception as e:
         print(f"Error completing goal: {str(e)}")
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+
+@app.route("/download_ai_report", methods=["GET"])
+def download_ai_report():
+    """Generate and return a PDF version of the latest AI Insights (PDF only, not on page)."""
+    try:
+        from ai_local.llama_local import call_local_llama
+    except Exception:
+        call_local_llama = None
+
+    try:
+        import pdfkit
+        import io
+        import shutil
+        import os
+        from datetime import datetime
+        from flask import send_file, render_template, jsonify
+
+        # --- Gather database data ---
+        employees = Employee.query.all()
+        total_employees = len(employees)
+        avg_performance = round(
+            sum([getattr(e, "performance_score", 0) for e in employees]) / total_employees, 2
+        ) if total_employees else 0
+        goals = Goal.query.all() if 'Goal' in globals() else []
+        feedbacks = Feedback.query.all() if 'Feedback' in globals() else []
+        completed_goals = sum(1 for g in goals if getattr(g, "status", "").lower() == "completed")
+        pending_goals = sum(1 for g in goals if getattr(g, "status", "").lower() != "completed")
+        feedback_count = len(feedbacks)
+
+        # --- Top Performers ---
+        top_emps = sorted(employees, key=lambda e: getattr(e, "performance_score", 0), reverse=True)[:5]
+        top_performers = [{"name": e.name, "score": getattr(e, "performance_score", "N/A")} for e in top_emps]
+
+        # --- Human-readable fallback summary ---
+        fallback_summary = f"""
+        Company Snapshot:
+        - Total Employees: {total_employees}
+        - Average Performance Score: {avg_performance}
+        - Completed Goals: {completed_goals}
+        - Pending Goals: {pending_goals}
+        - Total Feedback Entries: {feedback_count}
+
+        Top Performers:
+        {chr(10).join([f"- {e['name']}: {e['score']}" for e in top_performers])}
+        """.replace("\n", "<br>")
+
+        # --- AI report text ---
+        insights = ""
+        try:
+            if call_local_llama:
+                prompt = f"""
+                You are the WorkWise AI Analyst. Analyze the following data and create a detailed company insight report.
+                Provide sections for Key Observations, Actionable Recommendations, and Overall Sentiment.
+
+                Company Data:
+                Total Employees: {total_employees}
+                Average Performance Score: {avg_performance}
+                Completed Goals: {completed_goals}
+                Pending Goals: {pending_goals}
+                Total Feedback Entries: {feedback_count}
+
+                Top Performers:
+                {chr(10).join([f"{e['name']}: {e['score']}" for e in top_performers])}
+                """
+                ai_response = call_local_llama(prompt)
+                insights = str(ai_response).strip() if ai_response else ""
+        except Exception:
+            insights = ""
+
+        # --- Clean AI text ---
+        insights_html = insights.replace("\n", "<br>") if insights else ""
+
+        # --- Render HTML template ---
+        rendered_html = render_template(
+            "ai_report_template.html",
+            date=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+            total_employees=total_employees,
+            avg_performance=avg_performance,
+            completed_goals=completed_goals,
+            pending_goals=pending_goals,
+            feedback_count=feedback_count,
+            top_performers=top_performers,
+            insights=insights_html,
+            fallback_summary=fallback_summary
+        )
+
+        # ==============================================================
+        #  ROBUST PDF GENERATION LOGIC (MULTI-PATH WKHTMLTOPDF HANDLER)
+        # ==============================================================
+        import shutil
+
+        candidates = [
+            os.environ.get("WKHTMLTOPDF_PATH"),
+            r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
+            shutil.which("wkhtmltopdf")
+        ]
+
+        wk_path = None
+        for p in candidates:
+            if p and os.path.isfile(p):
+                wk_path = p
+                break
+
+        if not wk_path:
+            # return JSON explaining what was tried
+            return jsonify({
+                "success": False,
+                "error": "No wkhtmltopdf executable found. Tried: "
+                         + ", ".join([str(c) for c in candidates if c])
+                         + ". Please install wkhtmltopdf or set WKHTMLTOPDF_PATH environment variable.",
+            }), 500
+
+        # Configure pdfkit
+        config = pdfkit.configuration(wkhtmltopdf=wk_path)
+
+        # Generate the PDF
+        pdf_bytes = pdfkit.from_string(rendered_html, False, configuration=config)
+
+        # --- Optionally save a copy in /reports ---
+        reports_dir = os.path.join(BASE_DIR, "reports")
+        os.makedirs(reports_dir, exist_ok=True)
+        pdf_filename = f"WorkWise_AI_Report_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.pdf"
+        archive_path = os.path.join(reports_dir, pdf_filename)
+        with open(archive_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        # --- Send PDF as download ---
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            download_name=pdf_filename,
+            mimetype="application/pdf",
+            as_attachment=True
+        )
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"PDF Generation Error: {str(e)}"
+        }), 500
+
 
 
 # ==========================
