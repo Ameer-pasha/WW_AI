@@ -14,9 +14,7 @@
 
 <aside class="sidebar">
     <div class="logo-section">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="#007BFF" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM14.5 8C15.33 8 16 8.67 16 9.5C16 10.33 15.33 11 14.5 11C13.67 11 13 10.33 13 9.5C13 8.67 13.67 8 14.5 8ZM9.5 8C10.33 8 11 8.67 11 9.5C11 10.33 10.33 11 9.5 11C8.67 11 8 10.33 8 9.5C8 8.67 8.67 8 9.5 8ZM12 19.2C9.5 19.2 7.4 17.67 6.6 15.4H17.4C16.6 17.67 14.5 19.2 12 19.2Z"/>
-        </svg>
+        
         <h1>WorkWise AI</h1>
         <p>
             {% if user.role == "Manager" %}
@@ -293,6 +291,106 @@
 <!-- LinkedIn Modal END -->
 
 <script src="{{ url_for('static', filename='js/linkedin.js') }}"></script>
+
+<div id="pdfReportModal" class="modal" **style="display: none;"**>
+    <div class="modal-content pdf-modal-content">
+        <span class="close-btn" onclick="closePdfReportModal()">&times;</span>
+        
+        <h3 class="modal-title-report">AI Monthly Performance Report</h3>
+        <p class="text-secondary modal-subtitle-report">Generated on: <span id="report-date">Nov 9, 2025</span></p>
+
+        <div class="report-scroll-area">
+            
+            <section class="report-section">
+                <h4>🎯 Key Takeaways & Summary</h4>
+                <p>The team demonstrated a strong focus on high-priority tasks, leading to a **+12% increase in Team KPIs** this period. Overall performance remains high, but minor score variance indicates a need for targeted support for a few employees.</p>
+            </section>
+            
+            <section class="report-section">
+                <h4>📊 Performance Metrics</h4>
+                <div class="report-stat-grid">
+                    <div>
+                        <p>Team Health Score:</p>
+                        <p class="stat-value">{{ avg_performance }}/100</p>
+                    </div>
+                    <div>
+                        <p>Goal Completion Rate:</p>
+                        <p class="stat-value blue-text">{{ goal_completion_rate }}%</p>
+                    </div>
+                    <div>
+                        <p>Total Commits:</p>
+                        <p class="stat-value">{{ total_commits or 3741 }}</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="report-section">
+                <h4>⭐ Top Performer Spotlight</h4>
+                {% if top_performers %}
+                <p>Congratulations to **{{ top_performers[0].name }}** ({{ top_performers[0].performance_score }} pts) for leading the team this period. Their consistent commitment to code quality and delivery is commendable.</p>
+                {% else %}
+                <p>No top performers data available this period.</p>
+                {% endif %}
+            </section>
+            
+            <section class="report-section">
+                <h4>📝 Detailed AI Recommendations</h4>
+                <p><strong>Recommendation 1 (Team Health):</strong> Schedule brief 15-minute check-ins with employees whose scores are below 70% to identify potential burnout or blockers. This proactive step can prevent minor issues from becoming major performance dips.</p>
+                <p><strong>Recommendation 2 (Efficiency):</strong> Analyze the deployment pipeline to ensure employees have the necessary resources and tooling. High effort metrics combined with low output may indicate a bottleneck in their workflow.</p>
+                <p><strong>Recommendation 3 (Goal Setting):</strong> For high performers, consider assigning one "stretch" goal per quarter focused on professional development or mentorship to encourage growth and knowledge transfer.</p>
+                <p>--- End of Report Placeholder Content ---</p>
+            </section>
+        </div>
+        
+        <div class="modal-actions-report">
+            <button class="download-pdf-btn" onclick="confirmPdfDownload()">Download PDF</button>
+        </div>
+    </div>
+</div>
+<script>
+    // Get the modal element
+    const pdfReportModal = document.getElementById('pdfReportModal');
+
+    // Function to OPEN the modal
+    function openPdfReportModal() {
+        // Set the backdrop to be visible and allow the content to center
+        pdfReportModal.style.display = 'flex'; 
+        
+        // Update the date dynamically
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    // Function to CLOSE the modal
+    function closePdfReportModal() {
+        pdfReportModal.style.display = 'none';
+    }
+
+    // Function to handle the actual download (simulation)
+    function confirmPdfDownload() {
+        alert("✅ Starting download for the AI Monthly Performance Report!");
+        closePdfReportModal();
+    }
+    
+    // CRITICAL: Ensure the existing "Download PDF" button in the card triggers this modal
+    document.addEventListener('DOMContentLoaded', () => {
+        const cardDownloadBtn = document.querySelector('.report-card .download-btn');
+        if (cardDownloadBtn) {
+            // Replaces the default button action with the modal trigger
+            cardDownloadBtn.setAttribute('onclick', 'openPdfReportModal()');
+        }
+    });
+
+    // Close modal on outside click
+    window.onclick = function(event) {
+        if (event.target == pdfReportModal) {
+            closePdfReportModal();
+        }
+    }
+</script>
 
 </body>
 </html>
