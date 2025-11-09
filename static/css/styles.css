@@ -285,8 +285,8 @@ body.dark-mode .input-group input, body.dark-mode .modal textarea {
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     text-align: center; 
     
-    /* CRITICAL CHANGE: Add bottom padding and prevent shrinking */
-    padding-bottom: 25px; 
+    /* CRITICAL FIX: Increase bottom padding for a better gap */
+    padding-bottom: 40px; 
     flex-shrink: 0;
 }
 
@@ -706,26 +706,40 @@ body.dark-mode .leaderboard-item.top-performer {
 .reward-btn:hover { background-color: #218838; transform: translateY(-1px); }
 
 /* Reward Modal Styles */
+/* In styles.css, verify/replace the general modal styles (e.g., in Section 5) */
 .modal {
-    display: none; 
+    display: none; /* CRITICAL: Enables Flexbox for centering */
     position: fixed;
     z-index: 100;
     left: 0; top: 0;
     width: 100%; height: 100%;
-    overflow: auto;
+    /* Allow scrolling only if content is bigger than screen height */
+    overflow-y: auto; 
+    
     background-color: rgba(0,0,0,0.4); 
-    padding-top: 50px;
+    
+    /* FIX: Center content horizontally and vertically */
+    justify-content: center;
+    align-items: center;   
+    
+    /* Use padding as a visible gap/buffer around the content */
+    padding-top: 40px; 
+    padding-bottom: 40px;
 }
 
 .modal-content {
     background-color: var(--color-card-background);
-    margin: 10% auto; 
+    /* FIX: Remove vertical margins so align-items: center works correctly */
+    margin: 0; 
     padding: 30px;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     width: 90%;
-    max-width: 450px;
+    max-width: 450px; 
     position: relative;
+    /* Enable internal flexible layout for scrollable area */
+    display: flex;
+    flex-direction: column;
 }
 
 .close-btn {
@@ -1203,4 +1217,126 @@ body.dark-mode .status-overdue { background-color: #3B1E22; color: #FF6B6B; }
     font-size: 0.95em;
     background-color: var(--color-card-background);
     color: var(--color-text-dark);
+}
+
+/* ====================================================== */
+/* 9. AI PDF REPORT MODAL STYLES (NEW) */
+/* ====================================================== */
+
+.pdf-modal-content {
+    /* Set medium width and height */
+    max-width: 700px;
+    max-height: 75vh; /* FIX: Medium height (75% of viewport height) */
+
+    /* Ensure it works as a centered item */
+    margin: 0;
+    flex-shrink: 0;
+
+    /* General content styles */
+    padding: 20px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    width: 90%;
+
+    /* Overrides for internal layout (inherited from .modal-content) */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-title-report {
+    color: var(--color-text-dark);
+    font-size: 24px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.modal-subtitle-report {
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* CRITICAL: Defines the scrollable area */
+.report-scroll-area {
+    flex-grow: 1; /* Takes up all available vertical space */
+    overflow-y: auto; /* Enables vertical scrolling */
+    padding: 10px;
+    margin: 0 -10px; /* Pulls content to the edge of the scroll area */
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+body.dark-mode .report-scroll-area {
+    border-color: #3C3C5A;
+}
+
+/* Report Sections */
+.report-section {
+    padding: 15px 0;
+    margin-bottom: 10px;
+}
+
+.report-section h4 {
+    color: var(--color-primary-blue);
+    font-size: 18px;
+    border-bottom: 2px solid var(--color-sidebar-active-bg);
+    padding-bottom: 5px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.report-section p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--color-text-dark);
+    margin-bottom: 10px;
+}
+
+/* Grid for Metrics */
+.report-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    background-color: var(--color-background);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+body.dark-mode .report-stat-grid {
+    background-color: #343468;
+}
+
+.report-stat-grid p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-light-grey);
+}
+.report-stat-grid .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text-dark);
+    margin-top: 5px;
+}
+.report-stat-grid .stat-value.blue-text {
+    color: var(--color-primary-blue);
+}
+
+/* Button Alignment at the bottom */
+.modal-actions-report {
+    padding-top: 20px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.download-pdf-btn {
+    padding: 12px 30px;
+    background-color: var(--color-primary-blue);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.download-pdf-btn:hover {
+    background-color: #0056b3;
 }
