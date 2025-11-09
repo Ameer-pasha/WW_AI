@@ -100,60 +100,101 @@ def ai_suggest_local():
 @app.route("/ai/insights_local", methods=["GET"])
 def ai_insights_local():
     """
-    Analyze all employee and manager data, summarize it, and get AI insights.
+    Disable AI insights display on the Insights page
+    but keep backend generation for report and modal.
     """
     try:
-        # Step 1 — Collect data from DB
+        # Step 1 — Collect summary data (still useful for backend)
         employees = Employee.query.all()
         goals = Goal.query.all() if 'Goal' in globals() else []
         feedbacks = Feedback.query.all() if 'Feedback' in globals() else []
 
         total_employees = len(employees)
-        avg_performance = sum([getattr(e, "performance_score", 0) for e in employees]) / total_employees if total_employees else 0
+        avg_performance = (
+            sum([getattr(e, "performance_score", 0) for e in employees]) / total_employees
+            if total_employees else 0
+        )
         completed_goals = sum([1 for g in goals if getattr(g, "status", "").lower() == "completed"])
         pending_goals = sum([1 for g in goals if getattr(g, "status", "").lower() != "completed"])
         feedback_count = len(feedbacks)
 
-        # Step 2 — Format summary
+        # Step 2 — (Backend data consistency, but no AI generation)
+        _ = f"""
+        Snapshot:
+        - Employees: {total_employees}
+        - Avg Performance: {avg_performance:.2f}
+        - Completed Goals: {completed_goals}
+        - Pending Goals: {pending_goals}
+        - Feedback Entries: {feedback_count}
+        """
+
+        # Step 3 — Return empty insights (disabling display)
+        return jsonify({
+            "success": True,
+            "insights": ""  # Prevents any insights text from appearing on the /insights page
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/ai/insights_report", methods=["GET"])
+def ai_insights_report():
+    """
+    Dedicated AI insights endpoint for floating report and PDF generation.
+    """
+    try:
+        from ai_local.llama_local import call_local_llama
+
+        # --- Collect summary data ---
+        employees = Employee.query.all()
+        goals = Goal.query.all() if 'Goal' in globals() else []
+        feedbacks = Feedback.query.all() if 'Feedback' in globals() else []
+
+        total_employees = len(employees)
+        avg_performance = (
+            sum([getattr(e, "performance_score", 0) for e in employees]) / total_employees
+            if total_employees else 0
+        )
+        completed_goals = sum(
+            [1 for g in goals if getattr(g, "status", "").lower() == "completed"]
+        )
+        feedback_count = len(feedbacks)
+
+        # --- Build AI prompt ---
         summary_text = f"""
         Company Snapshot:
         - Total Employees: {total_employees}
         - Average Performance Score: {avg_performance:.2f}
         - Completed Goals: {completed_goals}
-        - Pending Goals: {pending_goals}
         - Total Feedback Entries: {feedback_count}
         """
 
-        # Optional: add a few employee highlights
-        top_emps = sorted(employees, key=lambda e: getattr(e, "performance_score", 0), reverse=True)[:5]
-        summary_text += "\n\nTop Performers:\n" + "\n".join([f"{e.name}: {getattr(e, 'performance_score', 'N/A')}" for e in top_emps])
-
-        # Step 3 — Create the AI prompt
-        from ai_local.llama_local import call_local_llama
-
         prompt = f"""
-        You are the WorkWise AI analyst. Analyze the data below and generate insights that would help improve team performance,
-        morale, and efficiency. Be concise and actionable.
+        You are the WorkWise AI analyst. Analyze the company data and generate concise insights.
 
         Data Summary:
         {summary_text}
 
         Format:
-        - Key Observations
-        - Actionable Recommendations
-        - Overall Sentiment
+        - **Key Observations**
+        - **Actionable Recommendations**
+        - **Overall Sentiment**
         """
 
-        # Step 4 — Call local LLaMA via Ollama
         insights = call_local_llama(prompt)
+        if not insights:
+            return jsonify({
+                "success": False,
+                "error": "No AI response received."
+            }), 500
 
-        return jsonify({
-            "success": True,
-            "insights": insights
-        })
+        return jsonify({"success": True, "insights": insights})
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)

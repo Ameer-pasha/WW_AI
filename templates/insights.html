@@ -196,8 +196,14 @@
 
     <!-- AI Insights Section -->
     <section id="aiInsightsSection" class="p-4 bg-white rounded-xl shadow mt-4">
-        <h2 class="text-2xl font-bold mb-3">🤖 WorkWise AI Insights</h2>
-        <p id="aiInsightsText" class="text-gray-700 whitespace-pre-line">Loading AI insights...</p>
+        <h2 class="text-2xl font-bold mb-3"></h2>
+        <p id="aiInsightsText" 
+           class="text-gray-700 text-center italic text-sm cursor-pointer hover:underline" 
+           onclick="openPdfReportModal()">
+            📊 Full AI insights are available in your floating performance report window.
+            <br>
+            <span style="color:#2563eb;">Click here to view detailed AI insights.</span>
+        </p>
     </section>
 
     <script>
@@ -283,100 +289,162 @@
 
 <!-- PDF Report Modal -->
 <div id="pdfReportModal" class="modal" style="display: none;">
-    <div class="modal-content pdf-modal-content">
-        <span class="close-btn" onclick="closePdfReportModal()">&times;</span>
-        <h3 class="modal-title-report">AI Monthly Performance Report</h3>
-        <p class="text-secondary modal-subtitle-report">Generated on: <span id="report-date">Nov 9, 2025</span></p>
+  <div class="modal-content pdf-modal-content">
+    <span class="close-btn" onclick="closePdfReportModal()">&times;</span>
+    <h3 class="modal-title-report">AI Monthly Performance Report</h3>
+    <p class="text-secondary modal-subtitle-report">
+      Generated on: <span id="report-date">Nov 9, 2025</span>
+    </p>
 
-        <div class="report-scroll-area">
-            <section class="report-section">
-                <h4>🎯 Key Takeaways & Summary</h4>
-                <p>The team demonstrated a strong focus on high-priority tasks, leading to a **+12% increase in Team KPIs** this period. Overall performance remains high, but minor score variance indicates a need for targeted support for a few employees.</p>
-            </section>
-            
-            <section class="report-section">
-                <h4>📊 Performance Metrics</h4>
-                <div class="report-stat-grid">
-                    <div>
-                        <p>Team Health Score:</p>
-                        <p class="stat-value">{{ avg_performance }}/100</p>
-                    </div>
-                    <div>
-                        <p>Goal Completion Rate:</p>
-                        <p class="stat-value blue-text">{{ goal_completion_rate }}%</p>
-                    </div>
-                    <div>
-                        <p>Total Commits:</p>
-                        <p class="stat-value">{{ total_commits or 3741 }}</p>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="report-section">
-                <h4>⭐ Top Performer Spotlight</h4>
-                {% if top_performers %}
-                <p>Congratulations to **{{ top_performers[0].name }}** ({{ top_performers[0].performance_score }} pts) for leading the team this period.</p>
-                {% else %}
-                <p>No top performers data available this period.</p>
-                {% endif %}
-            </section>
-            
-            <section class="report-section">
-                <h4>📝 Detailed AI Recommendations</h4>
-                <p><strong>Recommendation 1 (Team Health):</strong> Schedule brief 15-minute check-ins with employees whose scores are below 70% to identify potential burnout or blockers.</p>
-                <p><strong>Recommendation 2 (Efficiency):</strong> Analyze the deployment pipeline to ensure employees have the necessary resources and tooling.</p>
-                <p><strong>Recommendation 3 (Goal Setting):</strong> For high performers, consider assigning one "stretch" goal per quarter focused on professional development or mentorship.</p>
-            </section>
+    <div class="report-scroll-area">
+      <section class="report-section">
+        <h4>🎯 Key Takeaways & Summary</h4>
+        <p>
+          The team demonstrated a strong focus on high-priority tasks, leading to
+          a **+12% increase in Team KPIs** this period. Overall performance
+          remains high, but minor score variance indicates a need for targeted
+          support for a few employees.
+        </p>
+      </section>
+
+      <section class="report-section">
+        <h4>📊 Performance Metrics</h4>
+        <div class="report-stat-grid">
+          <div>
+            <p>Team Health Score:</p>
+            <p class="stat-value">{{ avg_performance }}/100</p>
+          </div>
+          <div>
+            <p>Goal Completion Rate:</p>
+            <p class="stat-value blue-text">{{ goal_completion_rate }}%</p>
+          </div>
+          <div>
+            <p>Total Commits:</p>
+            <p class="stat-value">{{ total_commits or 3741 }}</p>
+          </div>
         </div>
-        
-        <div class="modal-actions-report">
-            <button class="download-pdf-btn" onclick="confirmPdfDownload()">Download PDF</button>
-        </div>
+      </section>
+
+      <section class="report-section">
+        <h4>⭐ Top Performer Spotlight</h4>
+        {% if top_performers %}
+        <p>
+          Congratulations to **{{ top_performers[0].name }}**
+          ({{ top_performers[0].performance_score }} pts) for leading the team
+          this period.
+        </p>
+        {% else %}
+        <p>No top performers data available this period.</p>
+        {% endif %}
+      </section>
+
+      <!-- ✅ Single correct section -->
+      <section class="report-section" id="dynamic-ai-insights">
+        <h4>📝 Detailed AI Recommendations</h4>
+        <p id="ai-insights-loading">Fetching latest AI insights...</p>
+      </section>
     </div>
+
+    <div class="modal-actions-report">
+      <button class="download-pdf-btn" onclick="confirmPdfDownload()">
+        Download PDF
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
-    const pdfReportModal = document.getElementById('pdfReportModal');
+async function loadDynamicAIInsights() {
+  const target = document.getElementById("dynamic-ai-insights");
+  const loading = document.getElementById("ai-insights-loading");
+  loading.textContent = "Fetching latest AI insights...";
 
-    function openPdfReportModal() {
-        pdfReportModal.style.display = 'flex';
-        document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
-            year: 'numeric', month: 'long', day: 'numeric'
-        });
+  try {
+    const response = await fetch("/ai/insights_report", { cache: "no-store" });
+    const data = await response.json();
+
+    if (data.success && data.insights && data.insights.trim() !== "") {
+      loading.remove();
+
+      // Format Markdown-style content into HTML
+      const formatted = data.insights
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+        .replace(/^(\d+)\.\s/gm, "<br><strong>$1.</strong> ")
+        .replace(/\n- /g, "<br>• ")
+        .replace(/\n/g, "<br>");
+
+      target.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="ai-insights-content"
+             style="font-size:14px;line-height:1.6;color:#333;padding-top:6px;">
+            ${formatted}
+        </div>`
+      );
+    } else {
+      loading.textContent = "⚠️ No AI insights available. Try again.";
     }
+  } catch (err) {
+    console.error(err);
+    loading.textContent = "⚠️ Unable to fetch insights from server.";
+  }
+}
 
-    function closePdfReportModal() {
-        pdfReportModal.style.display = 'none';
-    }
+// ✅ Unified function — triggers AI load when modal opens
+const pdfReportModal = document.getElementById("pdfReportModal");
 
-    // Trigger real AI PDF download
-    function confirmPdfDownload() {
-        closePdfReportModal();
-        const loading = document.createElement('div');
-        loading.textContent = '⏳ Generating AI Report... Please wait.';
-        loading.style.cssText = 'position:fixed;top:10px;right:10px;background:#2563eb;color:white;padding:10px 14px;border-radius:6px;';
-        document.body.appendChild(loading);
-
-        const link = document.createElement('a');
-        link.href = '/download_ai_report';
-        link.download = 'WorkWise_AI_Report.pdf';
-        document.body.appendChild(link);
-        link.click();
-        setTimeout(() => {
-            document.body.removeChild(link);
-            document.body.removeChild(loading);
-        }, 4000);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const cardDownloadBtn = document.querySelector('.report-card .download-btn');
-        if (cardDownloadBtn) cardDownloadBtn.setAttribute('onclick', 'openPdfReportModal()');
+function openPdfReportModal() {
+  pdfReportModal.style.display = "flex";
+  document.getElementById("report-date").textContent =
+    new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
 
-    window.onclick = function(event) {
-        if (event.target == pdfReportModal) closePdfReportModal();
-    }
+  // Clear old insights and load new
+  const dynamicSection = document.getElementById("dynamic-ai-insights");
+  dynamicSection.querySelectorAll(".ai-insights-content").forEach((el) =>
+    el.remove()
+  );
+  loadDynamicAIInsights();
+}
+
+function closePdfReportModal() {
+  pdfReportModal.style.display = "none";
+}
+
+function confirmPdfDownload() {
+  closePdfReportModal();
+  const loading = document.createElement("div");
+  loading.textContent = "⏳ Generating AI Report... Please wait.";
+  loading.style.cssText =
+    "position:fixed;top:10px;right:10px;background:#2563eb;color:white;padding:10px 14px;border-radius:6px;";
+  document.body.appendChild(loading);
+
+  const link = document.createElement("a");
+  link.href = "/download_ai_report";
+  link.download = "WorkWise_AI_Report.pdf";
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    document.body.removeChild(loading);
+  }, 4000);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const cardDownloadBtn = document.querySelector(".report-card .download-btn");
+  if (cardDownloadBtn)
+    cardDownloadBtn.setAttribute("onclick", "openPdfReportModal()");
+});
+
+window.onclick = function (event) {
+  if (event.target == pdfReportModal) closePdfReportModal();
+};
 </script>
+
 
 </body>
 </html>
